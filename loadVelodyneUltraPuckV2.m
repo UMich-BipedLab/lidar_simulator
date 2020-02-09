@@ -42,7 +42,7 @@ function properties = loadVelodyneUltraPuckV2(properties)
     %             properties.noise_sigma = [2*sqrt(0.05), sqrt(0.05)/2, 0.01]; % 
     %             properties.noise_sigma = [0.1, 0.1, 0.1]; % under 50m
     %             properties.noise_sigma = [0.2, 0.2, 0.2]; % 50m to 200m
-    %             properties.noise_sigma = [0, 0, 0];
+%     properties.noise_sigma = [0, 0, 0];
     
     %% Azimuth resolution
     switch properties.rpm 
