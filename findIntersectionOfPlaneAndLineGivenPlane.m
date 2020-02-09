@@ -29,45 +29,8 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
-% Example:
-% Determine the intersection of following the plane x+y+z+3=0 with the segment P0P1:
-% The plane is represented by the normal vector n=[1 1 1]
-% and an arbitrary point that lies on the plane, ex: V0=[1 1 -5]
-% The segment is represented by the following two points
-% P0=[-5 1 -1];
-% P1=[1 2 3]   ;
-% [I, check]=findIntersectionOfPlaneAndLine([1 1 1],[1 1 -5],[-5 1 -1],[1 2 3]);
-% clc
-% p_1=[-5 1 -1]';
-% p_2=[1 2 3];
-% vertices.x = [0 0 0 0 0 0];
-% vertices.y = [0.4330 3.0616e-17 -0.4330 -0.4330 -5.3594e-16 0.4330];
-% vertices.z = [0.2500 0.5000 0.2500 -0.2500 -0.5000 -0.2500];
-% [I, check] = t_findIntersectionOfPlaneAndLine(vertices, p_1, p_2);
 
-% function [I, check] = findIntersectionOfPlaneAndLine(n, V0, P0, P1)
-function [I, normal, check] = findIntersectionOfPlaneAndLine(polygon_vertices, p_1, p_2)
-% plane_line_intersect computes the intersection of a plane and a segment(or
-% a straight line)
-% Inputs: 
-%       p_1: end point 1 of the segment p_1, p_2
-%       p_2: end point 2 of the segment p_1, p_2
-%
-% Outputs:
-%      n: normal vector of the Plane 
-%      I    is the point of interection 
-%     Check is an indicator:
-%      0 => disjoint (no intersection)
-%      1 => the plane intersects p_1, p_2 in the unique point I
-%      2 => the segment lies on the plane
-%      3 => the intersection lies outside the segment p_1, p_2
-
-    if isstruct(polygon_vertices)
-        poly_mat = convertXYZstructToXYZmatrix(polygon_vertices);
-    else
-        poly_mat = polygon_vertices;
-    end
-    
+function [intersection_point, check] = findIntersectionOfPlaneAndLineGivenPlane(normal, centroid, p_1, p_2)
     if ~isrow(p_1)
         p_1 = p_1';
     end
@@ -75,11 +38,53 @@ function [I, normal, check] = findIntersectionOfPlaneAndLine(polygon_vertices, p
     if ~isrow(p_2)
         p_2 = p_2';
     end
-        
     
-    centroid = mean(poly_mat, 2)';
-    [U, ~, ~] = svd(poly_mat - centroid');
-    normal = U(:, 3);
-    normal = normal/norm(normal);
-    [I, check] = findIntersectionOfPlaneAndLineGivenPlane(normal, centroid, p_1, p_2);
+    if ~isrow(centroid)
+        centroid = centroid';
+    end
+    
+    intersection_point = [];
+    u = p_2 - p_1;
+    w = p_1 - centroid;
+    D = dot(normal, u);
+    N = -dot(normal, w);
+    
+    %% Check if two end points lie on the plane
+%     if dot(p_1 - centroid, normal) < 1e-5
+%         check = 1;
+%         intersection_point = makeColumn(p_1);
+%         disp("p1 intersect")
+%         
+%         return
+%     elseif dot(p_2 - centroid, normal) < 1e-5
+%         check = 1;
+%         intersection_point = makeColumn(p_2);
+%         disp("p2 intersect")
+%         return
+%     end
+    
+    %% Check if the segment intersect with the plane
+
+
+    if abs(D) < 10^-7 % Parallel to plane
+        if N == 0 % Lies on plane           
+            check = 2;
+            return
+        else
+            % No intersection
+            check=0;  
+            return
+        end
+    end
+    
+    % Compute the intersection parameter
+    sI = N / D;
+    intersection_point = p_1+ sI.*u;
+    if (sI < 0 || sI > 1)
+        % The intersection point lies outside the segment, so there is no intersection
+        check= 3;          
+    else
+        check=1;
+    end
+    intersection_point = makeColumn(intersection_point);
 end
