@@ -29,7 +29,7 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
-function point = limitInBoundary(point, boundary)
+function point = limitInBoundaryWithMaxMin(point, boundary)
     point(1) = max(min(point(1), boundary.x(1)), boundary.x(2));
     point(2) = max(min(point(2), boundary.y(1)), boundary.y(2));
     point(3) = max(min(point(3), boundary.z(1)), boundary.z(2));

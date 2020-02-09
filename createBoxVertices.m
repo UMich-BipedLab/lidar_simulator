@@ -29,7 +29,7 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
-function vertices = createBoxes(extreme_points)
+function vertices = createBoxVertices(extreme_points)
     vertices.x = [];
     vertices.y = [];
     vertices.z = [];
