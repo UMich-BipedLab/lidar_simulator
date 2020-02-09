@@ -103,10 +103,10 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
     range = LiDAR_opts.properties.range;
     num_beam = LiDAR_opts.properties.beam;
     num_obj = length(objects);
-    centroid = LiDAR_opts.centriod;
+    lidadr_centroid = LiDAR_opts.centriod;
     
-    if ~iscolumn(centroid)
-        centroid = centroid';
+    if ~iscolumn(lidadr_centroid)
+        lidadr_centroid = lidadr_centroid';
     end
     
     num_points = floor(2*pi/resolution);
@@ -130,6 +130,7 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
         LiDAR_points(ring_num).points.z = [];
     end
 
+%     for ring_num = 1:num_beam
     parfor ring_num = 1:num_beam
         LiDAR_opts_tmp =  LiDAR_opts; % make parfor more efficient
         elevation = deg2rad(LiDAR_opts_tmp.ring_elevation(ring_num).angle);
@@ -140,7 +141,9 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
 %             fprintf("ring_num: %i; point_num: %i\n", ring_num, i)
             [x, y, z] = sph2cart(azimuth, elevation, range);
             point = [x; y; z];
-            point = point + centroid; 
+            point = point + lidadr_centroid; 
+            point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
+%             point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
             % PS Boundaries limitation should be done after all the 
             % obstacles cheching
             
@@ -156,12 +159,13 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
                 % one). 
                 % The distance is without noise (raw projection point)
                 closest_point(ring_num).objects(object).distance = range;
-                [point_on_plane, intersect] = findIntersectionOfPlaneAndLine(objects(object), centroid, point);
+                [point_on_plane, ~, intersect] = findIntersectionOfPlaneAndLine(objects(object).object_vertices, lidadr_centroid, point);
+                
                 if intersect == 1
-                    [~, in] = checkInsidePolygon(objects(object), centroid, point_on_plane);
+                    [~, in] = checkInsidePolygon(objects(object).object_vertices, point_on_plane);
                     if in
                         flag_on_an_object = 1;
-                        point_on_plane = limitInBoundary(point_on_plane, boundary); % check boundary
+%                         point_on_plane = limitInBoundaryWithMaxMin(point_on_plane, boundary); % check boundary
                         noisy_point_on_plane = point_on_plane + [rand_x; rand_y; rand_z]; % add noise
                         closest_point(ring_num).objects(object).distance = norm(point_on_plane);
                         closest_point(ring_num).objects(object).point = noisy_point_on_plane;
@@ -181,13 +185,15 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
                                                                          closest_point(ring_num).objects(which_object).point(3)];
                 points(:, i) = closest_point(ring_num).objects(which_object).point;                                                      
             else
-                point = limitInBoundary(point, boundary); % check boundary
+%                 point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
+%                 point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
                 points(:, i) = point;
             end
-%             scatter3(point(1), point(2), point(3))
+%             scatter3(point(1), point(2), point(3), '.')
 %             hold on
-%             drawnow
+            
         end
+%         drawnow
 %         pause
         LiDAR_points(ring_num).points.x = points(1, :);
         LiDAR_points(ring_num).points.y = points(2, :);

@@ -32,7 +32,7 @@
 clear, clc
 
 % Scene number
-scene = 4;
+scene = 6;
 
 % Plotting parameters
 num_handles = 8;
@@ -54,7 +54,8 @@ plotMultiplePolygonsVertices(fig_handles(2), object_list, color_list)
 boundary.x = [20, -20];
 boundary.y = [10, -10];
 boundary.z = [10, -10];
-boundary.vertices = createBoxes(boundary);
+boundary.vertices = createBoxVertices(boundary);
+boundary.faces = createBoxFaces(boundary.vertices);
 scatter3(fig_handles(2), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
 
 plotOriginalAxis(fig_handles(2), 1)
@@ -82,8 +83,8 @@ disp("- Drawing simulated LiDAR environment...")
 
 for beam_num = 1:LiDAR_opts.properties.beam
     scatter3(fig_handles(3), LiDAR_ring_points(beam_num).points.x, ...
-                            LiDAR_ring_points(beam_num).points.y, ...
-                            LiDAR_ring_points(beam_num).points.z, '.')
+                             LiDAR_ring_points(beam_num).points.y, ...
+                             LiDAR_ring_points(beam_num).points.z, '.')
     hold(fig_handles(3), 'on')
 %     text(fig_handle(3), max(LiDAR_ring_points(beam_num).points.x), ...
 %                         max(LiDAR_ring_points(beam_num).points.y), ...
@@ -106,14 +107,14 @@ plotMultiplePolygonsVertices(fig_handles(4), object_list, color_list)
 plotOriginalAxis(fig_handles(4), 1, '-k')
 for object = 1:length(object_list)
     scatter3(fig_handles(4), [object_list(object).ring_points.x], ...
-                            [object_list(object).ring_points.y], ...
-                            [object_list(object).ring_points.z], color_list(object), '.')
+                             [object_list(object).ring_points.y], ...
+                             [object_list(object).ring_points.z], color_list(object), '.')
     
     % Plot on separated plots
     scatter3(fig_handles(4+object), [object_list(object).ring_points.x], ...
-                                   [object_list(object).ring_points.y], ...
-                                   [object_list(object).ring_points.z], color_list(object), '.')
-    plotConnectedVerticesStructure(fig_handles(4+object), object_list(object), 'b')
+                                    [object_list(object).ring_points.y], ...
+                                    [object_list(object).ring_points.z], color_list(object), '.')
+    plotConnectedVerticesStructure(fig_handles(4+object), object_list(object).object_vertices, 'b')
 end
 view_angle = [-86, 14];
 viewCurrentPlot(fig_handles(4), "Rings on Objects (Scene " + num2str(scene) + ")", view_angle)
@@ -132,6 +133,13 @@ for object = 1:length(object_list)
     fprintf("std of y: %f\n", std([object_list(object).ring_points.y]))
     fprintf("std of z: %f\n", std([object_list(object).ring_points.z]))
 end
+
+% for beam_num = 1:LiDAR_opts.properties.beam
+%     fprintf("\n--- ring %i\n", beam_num)
+%     fprintf("num_points of x: %i\n", length(LiDAR_ring_points(beam_num).points.x))
+%     fprintf("num_points of y: %i\n", length(LiDAR_ring_points(beam_num).points.y))
+%     fprintf("num_points of z: %i\n", length(LiDAR_ring_points(beam_num).points.z))
+% end
 
 fprintf("\n\n\n")
 disp("=================")
