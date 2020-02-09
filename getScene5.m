@@ -29,17 +29,21 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
-function [object_list, color_list] = getScene1()    
+function [object_list, color_list] = getScene6()    
     %% Description: 
-    % 2 medium
-    % One behind another but a bit offset
+    % 1 samll, 1 mediums
+    % Spread with different angled in front of the lidar
+    % More extreme
     
+    
+
     %% Create object list
     num_obj = 2;    
     object_list(num_obj).object_vertices = struct();
     color_list = getColors(num_obj);
     
     %% Create objects
+    objects1 = genShape("polygon", 0.5, 4);
     objects2 = genShape("polygon", 1.2, 5);
     
     % Plot original polygon (2D)
@@ -53,17 +57,20 @@ function [object_list, color_list] = getScene1()
     %% move away the polygon
     disp("--- Moving obstacles...")
     
-    % Move Object2
+    % Move Object1
+    object1_mat = convertXYZstructToXYZmatrix(objects1);
+    object1_mat_h = converToHomogeneousCoord(object1_mat);
+    rpy = [10 0 45]; % in degree
+    xyz = [2.5, 10, 0];
+    moved_obj1_mat_h = moveByRPYXYZ(object1_mat_h, rpy, xyz);
+    object_list(1).object_vertices = convertXYZmatrixToXYZstruct(moved_obj1_mat_h);
+
+%     % Move Object2
     object2_mat = convertXYZstructToXYZmatrix(objects2);
     object2_mat_h = converToHomogeneousCoord(object2_mat);
 
-    rpy = [0 0 0]; % in degree
-    xyz = [5 0 0];
+    rpy = [5 8 15]; % in degree
+    xyz = [18, -9, 0.1];
     moved_obj2_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    object_list(1).object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
-
-    rpy = [0 0 0]; % in degree
-    xyz = [7 1 0];
-    moved_obj3_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    object_list(2).object_vertices = convertXYZmatrixToXYZstruct(moved_obj3_mat_h);
+    object_list(2).object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
 end

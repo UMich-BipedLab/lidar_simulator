@@ -34,16 +34,20 @@ function [object_list, color_list] = getScene0()
     % 2 medium
     % One behind another
     
-
+    %% Create object list
+    num_obj = 2;    
+    object_list(num_obj).object_vertices = struct();
+    color_list = getColors(num_obj);
+    
     %% Create objects
     objects2 = genShape("polygon", 1.2, 5);
-
-    % Plotting 2D results
-%     pgon = polyshape(objects1.y, objects1.z);
-%     plot(fig_handle(1), pgon)
+    
+    % Plot original polygon (2D)
+    % pgon = polyshape(objects1.y, objects1.z);
+    % plot(fig_handle(1), pgon)
     % viewCurrentPlot(fig_handle(1), "2D")
 
-    % Plotting original polygon
+    % Plot original polygon (3D)
     % plotConnectedVerticesStructure(fig_handle(2), vertices, 'b')
 
     %% move away the polygon
@@ -56,13 +60,10 @@ function [object_list, color_list] = getScene0()
     rpy = [0 0 0]; % in degree
     xyz = [5 0 0];
     moved_obj2_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    moved_obj2_t = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
+    object_list(1).object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
 
     rpy = [0 0 0]; % in degree
     xyz = [7 0 0];
     moved_obj3_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    moved_obj3_t = convertXYZmatrixToXYZstruct(moved_obj3_mat_h);
-
-    object_list = [moved_obj2_t, moved_obj3_t];
-    color_list = ['r', 'g'];
+    object_list(2).object_vertices = convertXYZmatrixToXYZstruct(moved_obj3_mat_h);
 end

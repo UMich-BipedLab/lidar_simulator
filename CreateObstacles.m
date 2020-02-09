@@ -30,7 +30,7 @@
 %}
 
 function [object_list, color_list] = CreateObstacles(scene)
-    
+    fprintf("--- Using profile: %i\n", scene)
     switch scene
         case 0
             [object_list, color_list] = getScene0();
@@ -44,6 +44,12 @@ function [object_list, color_list] = CreateObstacles(scene)
             [object_list, color_list] = getScene4();
         case 5
             [object_list, color_list] = getScene5();
+        case 6
+            [object_list, color_list] = getScene6();
+        case 7
+            [object_list, color_list] = getScene7();
+        case 8
+            [object_list, color_list] = getScene8();
         otherwise
             error("iInexist scene: #%i", scene)
     end
