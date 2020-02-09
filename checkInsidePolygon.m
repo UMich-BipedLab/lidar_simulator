@@ -30,36 +30,53 @@
 %}
 
 
-function [interior, status] = checkInsidePolygon(polygon_vertices, centroid, point)
+function [interior, status] = checkInsidePolygon(polygon_vertices, point)
+    
     status = 0; % 0: outside of the polygon; 1: inside/on in the polygon;
     interior = [];
-    
-    if isstruct(polygon_vertices)
-        poly_mat = convertXYZstructToXYZmatrix(polygon_vertices);
+    if 1 %% Using angle sum method
+        angle_sum = computeAngleSum(polygon_vertices, point); 
+        if abs(angle_sum - 2*pi) < 1e-5
+            status = 1;
+            interior = point;
+        end
     else
-        poly_mat = polygon_vertices;
-    end
-    
-    if ~iscolumn(centroid)
-        centroid = centroid';
-    end
-    
-    if ~iscolumn(point)
-        point = point';
-    end
-    [Uc, Sc, Vc]=svd(poly_mat-centroid);
-    poly_mat_2D = Uc' * (poly_mat - centroid);
-    point_2D = Uc' * point - centroid;
-    
-    % TAKE ONLY Y-Z components
-    poly_mat_2D = poly_mat_2D(2:3, :); % Project out the distance component
-    point_2D = point_2D(2:3);
-    
-    
-    convex_hull = convhull(poly_mat_2D(1, :),  poly_mat_2D(2, :));
-    [in, on] = inpolygon(point_2D(1), point_2D(2), poly_mat_2D(1, convex_hull), poly_mat_2D(2, convex_hull));
-    if in || on
-        status = 1;
-        interior = point;
+        %% Using projection
+        if isstruct(polygon_vertices)
+            poly_mat = convertXYZstructToXYZmatrix(polygon_vertices);
+        else
+            poly_mat = polygon_vertices;
+        end
+
+        if ~iscolumn(point)
+            point = point';
+        end
+
+        centroid = mean(poly_mat, 2);
+        [Uc, Vc, ~] = svd(poly_mat - centroid);
+        Ind2D=[1,2];
+
+    %     [Uc, ~] = fixSignsRotation(Uc, Vc);
+    %     
+    %     if abs(Uc(2,1)) > abs(Uc(3,1))
+    %         Ind2D=[1,2];
+    %     else
+    %         Ind2D=[2,1];
+    %     end
+
+        poly_mat_2D = Uc' * (poly_mat - centroid);
+        point_2D = Uc' * (point - centroid); % DO NOT need minus the centroid
+
+        % TAKE ONLY Y-Z components
+        poly_mat_2D = poly_mat_2D(Ind2D, :); % Project out the distance component
+        point_2D = point_2D(Ind2D);
+
+
+        convex_hull = convhull(poly_mat_2D(1, :),  poly_mat_2D(2, :));
+        [in, on] = inpolygon(point_2D(1), point_2D(2), poly_mat_2D(1, convex_hull), poly_mat_2D(2, convex_hull));
+        if in || on
+            status = 1;
+            interior = point;
+        end
     end
 end
