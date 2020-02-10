@@ -98,7 +98,7 @@
 % axis equal
 % disp("Done")
 
-function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDAR_opts)
+function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, LiDAR_opts)
     resolution = deg2rad(LiDAR_opts.properties.az_resolution);
     range = LiDAR_opts.properties.range;
     num_beam = LiDAR_opts.properties.beam;
@@ -128,18 +128,29 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
         LiDAR_points(ring_num).points.x = [];
         LiDAR_points(ring_num).points.y = [];
         LiDAR_points(ring_num).points.z = [];
+        LiDAR_points(ring_num).noise_model = genLiDARNoiseModel(ring_num, LiDAR_opts);
     end
 
 %     for ring_num = 1:num_beam
     parfor ring_num = 1:num_beam
         LiDAR_opts_tmp =  LiDAR_opts; % make parfor more efficient
-        elevation = deg2rad(LiDAR_opts_tmp.ring_elevation(ring_num).angle);
+        % Noise model for this ring
+        noise_range = LiDAR_points(ring_num).noise_model.range_noise;
+        noise_az = LiDAR_points(ring_num).noise_model.az_noise;
+        noise_el = LiDAR_points(ring_num).noise_model.el_noise;
+        
+        % Elevatoin angle for this ring
+        elevation = deg2rad(LiDAR_opts_tmp.properties.ring_elevation(ring_num).angle);
         points = zeros(3, num_points);
 
         for i = 1 : num_points
             azimuth = (i-1) * resolution;
 %             fprintf("ring_num: %i; point_num: %i\n", ring_num, i)
-            [x, y, z] = sph2cart(azimuth, elevation, range);
+
+            %% Apply model noise (Biases of the system)
+            [x, y, z] = sph2cart(azimuth + deg2rad(noise_az), ...
+                                 elevation + deg2rad(noise_el),...
+                                 range + deg2rad(noise_range));
             point = [x; y; z];
             point = point + lidadr_centroid; 
             point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
@@ -147,6 +158,7 @@ function [objects, LiDAR_points, all_points] = sim_LiDAR(objects, boundary, LiDA
             % PS Boundaries limitation should be done after all the 
             % obstacles cheching
             
+            %% Apply sensor noise (random noise)
             % Fixed noise for this point
             rand_z = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(3), 1); % ring
             rand_y = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(2), 1); % noise on ring
