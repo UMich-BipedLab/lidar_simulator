@@ -33,6 +33,7 @@ clear, clc
 
 % Scene number
 scene = 6;
+show_statistics = 1;
 
 % Plotting parameters
 num_handles = 8;
@@ -64,16 +65,18 @@ viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(scene) + ")")
 
 %% LiDAR properties
 disp("- Loading LiDAR properties...")
+LiDAR_opts.noise_model = 1; % 1: simpleMechanicalNoiseModel
 LiDAR_opts.properties.rpm = 600;
 LiDAR_opts.properties.range = 50;
 LiDAR_opts.centriod = [0 0 0];
 LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
-LiDAR_opts.ring_elevation = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);
+[LiDAR_opts.properties.ring_elevation, ...
+ LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);
 
 
 %% Simulate environment
 disp("- Simulating LiDAR environment given provided obstacles...")
-[object_list, LiDAR_ring_points, all_points]= sim_LiDAR(object_list, boundary, LiDAR_opts);
+[object_list, LiDAR_ring_points, all_points]= simulateLiDAR(object_list, boundary, LiDAR_opts);
 
 
 %% Plotting simulation
@@ -124,22 +127,52 @@ viewCurrentPlot(fig_handles(6), "Object 2 (Scene " + num2str(scene) + ")", view_
 viewCurrentPlot(fig_handles(7), "Object 3 (Scene " + num2str(scene) + ")", view_angle)
 viewCurrentPlot(fig_handles(8), "Object 4 (Scene " + num2str(scene) + ")", view_angle)
 
-disp("------ Statistics ------")
-disp("- std on each target")
-disp("------------------------")
-for object = 1:length(object_list)
-    fprintf("\n--- Object %i\n", object)
-    fprintf("std of x: %f\n", std([object_list(object).ring_points.x]))
-    fprintf("std of y: %f\n", std([object_list(object).ring_points.y]))
-    fprintf("std of z: %f\n", std([object_list(object).ring_points.z]))
+if show_statistics
+    fprintf("\n\n\n")
+    disp("==================")
+    disp("--- Statistics ---")
+    disp("==================")
+    fprintf("\n\n------------------------\n")
+    disp("- std on each target")
+    disp("------------------------")
+    for object = 1:length(object_list)
+        fprintf("\n--- Object %i\n", object)
+        fprintf("std of x: %f\n", std([object_list(object).ring_points.x]))
+        fprintf("std of y: %f\n", std([object_list(object).ring_points.y]))
+        fprintf("std of z: %f\n", std([object_list(object).ring_points.z]))
+    end
+
+    fprintf("\n\n------------------------\n")
+    disp("- Noise on each ring")
+    disp("------------------------")
+    struct2table([LiDAR_ring_points.noise_model])
+    
+%     fprintf("\n\n------------------------\n")
+%     disp("- Numbers of points on each ring")
+%     disp("------------------------")
+%     for beam_num = 1:LiDAR_opts.properties.beam
+%         fprintf("\n--- ring %i\n", beam_num)
+%         fprintf("num_points of x: %i\n", length(LiDAR_ring_points(beam_num).points.x))
+%         fprintf("num_points of y: %i\n", length(LiDAR_ring_points(beam_num).points.y))
+%         fprintf("num_points of z: %i\n", length(LiDAR_ring_points(beam_num).points.z))
+%     end
 end
 
-% for beam_num = 1:LiDAR_opts.properties.beam
-%     fprintf("\n--- ring %i\n", beam_num)
-%     fprintf("num_points of x: %i\n", length(LiDAR_ring_points(beam_num).points.x))
-%     fprintf("num_points of y: %i\n", length(LiDAR_ring_points(beam_num).points.y))
-%     fprintf("num_points of z: %i\n", length(LiDAR_ring_points(beam_num).points.z))
-% end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 fprintf("\n\n\n")
 disp("=================")
