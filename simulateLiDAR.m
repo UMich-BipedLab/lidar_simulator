@@ -122,12 +122,16 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             LiDAR_points(ring_num).objects(obj).points.x = [];
             LiDAR_points(ring_num).objects(obj).points.y = [];
             LiDAR_points(ring_num).objects(obj).points.z = [];
+            LiDAR_points(ring_num).objects(obj).points.I = [];
+            LiDAR_points(ring_num).objects(obj).points.R = [];
             closest_point(ring_num).objects(obj).point = [];
             closest_point(ring_num).objects(obj).distance = [];
         end
         LiDAR_points(ring_num).points.x = [];
         LiDAR_points(ring_num).points.y = [];
         LiDAR_points(ring_num).points.z = [];
+        LiDAR_points(ring_num).points.I = [];
+        LiDAR_points(ring_num).points.R = [];
         LiDAR_points(ring_num).noise_model = genLiDARNoiseModel(ring_num, LiDAR_opts);
     end
 
@@ -141,7 +145,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         
         % Elevatoin angle for this ring
         elevation = deg2rad(LiDAR_opts_tmp.properties.ring_elevation(ring_num).angle);
-        points = zeros(3, num_points);
+        points = zeros(5, num_points); % X Y Z I R
 
         for i = 1 : num_points
             azimuth = (i-1) * resolution;
@@ -155,8 +159,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             point = point + lidadr_centroid; 
             point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
 %             point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
-            % PS Boundaries limitation should be done after all the 
-            % obstacles cheching
+
             
             %% Apply sensor noise (random noise)
             % Fixed noise for this point
@@ -171,7 +174,8 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                 % one). 
                 % The distance is without noise (raw projection point)
                 closest_point(ring_num).objects(object).distance = range;
-                [point_on_plane, ~, intersect] = findIntersectionOfPlaneAndLine(objects(object).object_vertices, lidadr_centroid, point);
+                [point_on_plane, ~, intersect] = findIntersectionOfPlaneAndLine(objects(object).object_vertices, ...
+                                                                                lidadr_centroid, point);
                 
                 if intersect == 1
                     [~, in] = checkInsidePolygon(objects(object).object_vertices, point_on_plane);
@@ -180,6 +184,9 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
 %                         point_on_plane = limitInBoundaryWithMaxMin(point_on_plane, boundary); % check boundary
                         noisy_point_on_plane = point_on_plane + [rand_x; rand_y; rand_z]; % add noise
                         closest_point(ring_num).objects(object).distance = norm(point_on_plane);
+                        
+                        % Assign intensity and ring number
+                        noisy_point_on_plane = [noisy_point_on_plane; 255; ring_num];
                         closest_point(ring_num).objects(object).point = noisy_point_on_plane;
                     end
 %                     in_polygon = inhull(I, objects(object));
@@ -195,10 +202,15 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                                                                          closest_point(ring_num).objects(which_object).point(2)];
                 LiDAR_points(ring_num).objects(which_object).points.z = [LiDAR_points(ring_num).objects(which_object).points.z ...
                                                                          closest_point(ring_num).objects(which_object).point(3)];
+                LiDAR_points(ring_num).objects(which_object).points.I = [LiDAR_points(ring_num).objects(which_object).points.I ...
+                                                                         closest_point(ring_num).objects(which_object).point(4)];
+                LiDAR_points(ring_num).objects(which_object).points.R = [LiDAR_points(ring_num).objects(which_object).points.R ...
+                                                                         closest_point(ring_num).objects(which_object).point(5)];
                 points(:, i) = closest_point(ring_num).objects(which_object).point;                                                      
             else
 %                 point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
 %                 point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
+                point = [point; 255; ring_num];
                 points(:, i) = point;
             end
 %             scatter3(point(1), point(2), point(3), '.')
@@ -210,15 +222,27 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         LiDAR_points(ring_num).points.x = points(1, :);
         LiDAR_points(ring_num).points.y = points(2, :);
         LiDAR_points(ring_num).points.z = points(3, :);
+        LiDAR_points(ring_num).points.I = points(4, :);
+        LiDAR_points(ring_num).points.R = points(5, :);
     end
     
     % parse from lidar_points to objects
-    parfor object = 1:num_obj
+    for object = 1:num_obj
+        objects(object).points_mat = [];
         for ring_num = 1:num_beam
             objects(object).ring_points(ring_num).x = LiDAR_points(ring_num).objects(object).points.x;
             objects(object).ring_points(ring_num).y = LiDAR_points(ring_num).objects(object).points.y;
             objects(object).ring_points(ring_num).z = LiDAR_points(ring_num).objects(object).points.z;
+            objects(object).ring_points(ring_num).I = LiDAR_points(ring_num).objects(object).points.I;
+            objects(object).ring_points(ring_num).R = LiDAR_points(ring_num).objects(object).points.R;
+            points = [makeRow(LiDAR_points(ring_num).objects(object).points.x); ...
+                      makeRow(LiDAR_points(ring_num).objects(object).points.y); ...
+                      makeRow(LiDAR_points(ring_num).objects(object).points.z); ...
+                      makeRow(LiDAR_points(ring_num).objects(object).points.I); ...
+                      makeRow(LiDAR_points(ring_num).objects(object).points.R)];
+            objects(object).points_mat = [objects(object).points_mat, points];
         end
+
     end
     
     % all points
@@ -226,8 +250,8 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
     for ring_num = 1:num_beam
         index = (ring_num - 1) * num_points + 1;
         all_points(:, index:index+num_points-1) = [LiDAR_points(ring_num).points.x; ...
-                                                 LiDAR_points(ring_num).points.y; ...
-                                                 LiDAR_points(ring_num).points.z];
+                                                   LiDAR_points(ring_num).points.y; ...
+                                                   LiDAR_points(ring_num).points.z];
     end
 end
 
