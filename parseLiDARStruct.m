@@ -29,7 +29,7 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
-function ring = parseLiDARStruct(LiDAR_elevation_structure, prefix, num_beam)
+function [ring, ordered_ring] = parseLiDARStruct(LiDAR_elevation_structure, prefix, num_beam)
     num_beam_from_struct = numel(fieldnames(LiDAR_elevation_structure));
     
     if num_beam ~= num_beam_from_struct
@@ -42,5 +42,9 @@ function ring = parseLiDARStruct(LiDAR_elevation_structure, prefix, num_beam)
     for i = 0:num_beam-1
         key = convertCharsToStrings(prefix) + num2str(i);
         ring(i+1).angle = LiDAR_elevation_structure.(key);
+        ring(i+1).ring = num2str(i);
     end
+    
+    [~, idx] = sort([ring.angle]);
+    ordered_ring = ring(idx);
 end
