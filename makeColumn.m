@@ -1,5 +1,5 @@
-function point = makeColumn(point)
-    if ~iscolumn(point)
-        point = point';
+function points = makeColumn(points)
+    if ~iscolumn(points)
+        points = points';
     end
 end
