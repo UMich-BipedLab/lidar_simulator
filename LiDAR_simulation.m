@@ -29,17 +29,19 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
+%% General parameters
 clear, clc
-
-% Scene number
-scene = 6;
+scene = 6; % Scene number
 show_statistics = 1;
+addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 
-% Plotting parameters
+
+%% Plotting parameters
 num_handles = 8;
 start_number = 1;
 name = "testing";
 fig_handles = createFigHandleWithNumber(num_handles, start_number, name);
+
 
 %% Create objects
 disp("- Generating obstacles...")
@@ -159,19 +161,102 @@ if show_statistics
 end
 
 
+%% Intrinsic Calibration
+
+opts.method = 1; % Lie; Spherical
+opts.iterative = 1;
+opts.show_results = 1;
 
 
+opt_formulation = ["Lie","Spherical"]; % Lie or Spherical
+opts.num_scans = 1;
+opts.num_iters = 10;
+opts.num_beams = LiDAR_opts.properties.beam;
+num_targets = length(object_list);
+
+if (opt_formulation(opts.method) == "Lie")
+    data_split_with_ring_cartesian = cell(1,num_targets);
+    data_split_with_ring_cartesian_original = cell(1,num_targets);
+    
+    disp("Parsing data...")
+    for t = 1:num_targets
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams);
+    end 
+    data_split_with_ring_cartesian_original = data_split_with_ring_cartesian;
+    
+    disp("Optimizing using Lie Group method...")
+    if ~opts.iterative
+       opts.num_iters = 1;
+    end
+    
+    distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
+    distance(opts.num_iters).ring(opts.num_beams) = struct();
+    for k = 1: opts.num_iters
+        fprintf("--- Working on %i/%i\n", k, opts.num_iters)
+        [delta, plane, valid_rings_and_targets] = estimateIntrinsicLie(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring_cartesian);
+        if k == 1
+            distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
+        end
+        % update the corrected points
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring_cartesian, delta, valid_rings_and_targets, opt_formulation(opts.method));
+        distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
+    end
+
+elseif (opt_formulation(opts.method) == "Spherical")
+    % preprocess the data
+    spherical_data = cell(1,num_targets);
+    data_split_with_ring = cell(1, num_targets);
+    data_split_with_ring_cartesian = cell(1, num_targets);
+
+    disp("Parsing data...")
+    for t = 1:num_targets
+        spherical_data{t} = Cartesian2Spherical(object_list(t).ring_points.points_mat);
+        data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams);
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).ring_points.points_mat, opts.num_beams);
+    end
+    
+    disp("Optimizing using a mechanical model...")
+    if ~opts.iterative
+       opts.num_iters = 1;
+    end
+    distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
+    distance(opts.num_iters).ring(opts.num_beams) = struct(); 
+    
+     % iteratively optimize the intrinsic parameters
+    for k = 1: opts.num_iters
+        fprintf("--- Working on %i/%i\n", k, opts.num_iters)
+        [delta, plane, valid_rings_and_targets] = estimateIntrinsicFromMechanicalModel(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring, data_split_with_ring_cartesian);
+        if k == 1
+            distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
+        end
+        
+        % update the corrected points
+        data_split_with_ring = updateDatacFromMechanicalModel(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets);
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets, opt_formulation(opts.method));
+        distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
+    end
+end
+disp('Done optimization')
 
 
+%% show numerical results
+disp("Showing numerical results...")
+disp("Showing current estimate")
+results = struct('ring', {distance(end).ring(:).ring}, ...
+                 'num_points', {distance(end).ring(:).num_points}, ...
+                 'mean_original', {distance_original.ring(:).mean}, ...
+                 'std_original', {distance_original.ring(:).std}, ...
+                 'mean_diff', num2cell([distance_original.ring(:).mean] - [distance(end).ring(:).mean]), ...
+                 'std_diff', num2cell([distance_original.ring(:).std] - [distance(end).ring(:).std]), ...
+                 'mean_diff_in_mm', num2cell(([distance_original.ring(:).mean] - [distance(end).ring(:).mean]) * 1e3), ...
+                 'std_diff_in_mm', num2cell(([distance_original.ring(:).std] - [distance(end).ring(:).std])* 1e3));
+struct2table(distance(end).ring(:))
+disp("Showing comparison")
+struct2table(results)
 
-
-
-
-
-
-
-
-
+% check if ring mis-ordered
+disp("If the rings are mis-ordered...")
+checkRingOrderWithOriginal(data_split_with_ring_cartesian_original, data_split_with_ring_cartesian, num_targets, opts.num_beams)
 
 
 fprintf("\n\n\n")
