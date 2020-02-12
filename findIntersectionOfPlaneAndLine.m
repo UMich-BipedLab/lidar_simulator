@@ -46,7 +46,7 @@
 % [I, check] = t_findIntersectionOfPlaneAndLine(vertices, p_1, p_2);
 
 % function [I, check] = findIntersectionOfPlaneAndLine(n, V0, P0, P1)
-function [I, normal, check] = findIntersectionOfPlaneAndLine(polygon_vertices, p_1, p_2)
+function [I, normal, check] = findIntersectionOfPlaneAndLine(object, p_1, p_2)
 % plane_line_intersect computes the intersection of a plane and a segment(or
 % a straight line)
 % Inputs: 
@@ -62,24 +62,19 @@ function [I, normal, check] = findIntersectionOfPlaneAndLine(polygon_vertices, p
 %      2 => the segment lies on the plane
 %      3 => the intersection lies outside the segment p_1, p_2
 
-    if isstruct(polygon_vertices)
-        poly_mat = convertXYZstructToXYZmatrix(polygon_vertices);
+    p_1 = makeRow(p_1);
+    p_2 = makeRow(p_2);
+
+    % Convert to matrix
+    if isstruct(object.object_vertices)
+        poly_mat = convertXYZstructToXYZmatrix(object.object_vertices);
     else
-        poly_mat = polygon_vertices;
+        poly_mat = object.object_vertices;
     end
     
-    if ~isrow(p_1)
-        p_1 = p_1';
+    if ~isfield(object, 'normal') ||  ~isfield(object, 'cntroid')
+        [normal, centroid] = computePlane(poly_mat);
     end
-    
-    if ~isrow(p_2)
-        p_2 = p_2';
-    end
-        
-    
-    centroid = mean(poly_mat, 2)';
-    [U, ~, ~] = svd(poly_mat - centroid');
-    normal = U(:, 3);
-    normal = normal/norm(normal);
+
     [I, check] = findIntersectionOfPlaneAndLineGivenPlane(normal, centroid, p_1, p_2);
 end
