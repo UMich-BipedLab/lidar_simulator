@@ -38,11 +38,17 @@ function properties = loadVelodyneUltraPuckV2(properties)
     % std(BagData(current_index).lidar_target(1).scan.pc_points')
     % large tag: std 0.0130    0.0444    0.0457
     % small tag: std 0.0797    0.2187    0.1724
-    properties.noise_sigma = [0.05    0.008   0.005];
+%     properties.noise_sigma = [0.05    0.008   0.005];
     %             properties.noise_sigma = [2*sqrt(0.05), sqrt(0.05)/2, 0.01]; % 
     %             properties.noise_sigma = [0.1, 0.1, 0.1]; % under 50m
     %             properties.noise_sigma = [0.2, 0.2, 0.2]; % 50m to 200m
-%     properties.noise_sigma = [0, 0, 0];
+    
+    if properties.noise_enable
+        properties.noise_sigma = [0.05    0.008   0.005];
+    else
+        properties.noise_sigma = [0, 0, 0];
+    end
+        
     
     %% Azimuth resolution
     switch properties.rpm 
