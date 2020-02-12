@@ -53,5 +53,10 @@ function [object_list, color_list] = CreateObstacles(scene)
         otherwise
             error("iInexist scene: #%i", scene)
     end
+    fprintf("--- This profile contains %i of target(s).\n", length(object_list))
+    
+    for object = 1:length(object_list)
+        [object_list(object).normal, object_list(object).centroid] = computePlane(object_list(object));
+    end
     
 end
