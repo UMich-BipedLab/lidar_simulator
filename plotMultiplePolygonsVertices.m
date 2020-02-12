@@ -47,7 +47,8 @@ function plotMultiplePolygonsVertices(image_handle, polygons_vertices, color_lis
         end
     else
         for i = 1 : num_objs
-            plotConnectedVerticesStructure(image_handle, polygons_vertices(i).object_vertices, color_list(i))
+%             color_list(i)
+            plotConnectedVerticesStructure(image_handle, polygons_vertices(i).object_vertices, color_list{i})
         end        
     end
 
