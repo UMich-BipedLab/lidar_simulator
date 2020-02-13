@@ -31,14 +31,14 @@
 
 %% General parameters
 clear, clc
-scene = 7; % Scene number
+scene = 1; % Scene number
 show_statistics = 1;
 addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 
 % Intrinsic calibration 
 opts.method = 1; % Lie; Spherical
 opts.iterative = 1;
-opts.show_results = 1;
+opts.show_results = 0;
 
 
 % Create objects
@@ -73,9 +73,9 @@ viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(scene) + ")")
 %% LiDAR properties
 disp("- Loading LiDAR properties...")
 LiDAR_opts.noise_model = 1; % 1: simpleMechanicalNoiseModel
-LiDAR_opts.properties.rpm = 300;
+LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
 LiDAR_opts.properties.range = 50;
-LiDAR_opts.properties.noise_enable = 1;
+LiDAR_opts.properties.noise_enable = 0;
 LiDAR_opts.centriod = [0 0 0];
 LiDAR_opts.return_once = 0;
 LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
@@ -98,9 +98,9 @@ for beam_num = 1:LiDAR_opts.properties.beam
                              LiDAR_ring_points(beam_num).points.y, ...
                              LiDAR_ring_points(beam_num).points.z, '.')
     hold(fig_handles(3), 'on')
-%     text(fig_handle(3), max(LiDAR_ring_points(beam_num).points.x), ...
-%                         max(LiDAR_ring_points(beam_num).points.y), ...
-%                         min(LiDAR_ring_points(beam_num).points.z), num2str(beam_num))
+%     text(fig_handles(3), max(LiDAR_ring_points(beam_num).points.x), ...
+%                          max(LiDAR_ring_points(beam_num).points.y), ...
+%                          max(LiDAR_ring_points(beam_num).points.z), num2str(beam_num))
 end
 
 
@@ -151,10 +151,9 @@ end
 view_angle = [-86, 14];
 viewCurrentPlot(fig_handles(4), "Rings on Objects (Scene " + num2str(scene) + ")", view_angle)
 view_angle = [90, 0];
-viewCurrentPlot(fig_handles(5), "Object 1 (Scene " + num2str(scene) + ")", view_angle)
-viewCurrentPlot(fig_handles(6), "Object 2 (Scene " + num2str(scene) + ")", view_angle)
-viewCurrentPlot(fig_handles(7), "Object 3 (Scene " + num2str(scene) + ")", view_angle)
-viewCurrentPlot(fig_handles(8), "Object 4 (Scene " + num2str(scene) + ")", view_angle)
+for object = 1:length(object_list)
+    viewCurrentPlot(fig_handles(4+object), "Object 1 (Scene " + num2str(scene) + ")", view_angle)
+end
 
 if show_statistics
     fprintf("\n\n\n")
