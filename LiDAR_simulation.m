@@ -31,21 +31,26 @@
 
 %% General parameters
 clear, clc
-scene = 6; % Scene number
+scene = 7; % Scene number
 show_statistics = 1;
 addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 
+% Intrinsic calibration 
+opts.method = 1; % Lie; Spherical
+opts.iterative = 1;
+opts.show_results = 1;
 
-%% Plotting parameters
-num_handles = 8;
+
+% Create objects
+disp("- Generating obstacles...")
+[object_list, color_list] = CreateObstacles(scene);
+
+
+% Plotting parameters
+num_handles = length(object_list) + 5;
 start_number = 1;
 name = "testing";
 fig_handles = createFigHandleWithNumber(num_handles, start_number, name);
-
-
-%% Create objects
-disp("- Generating obstacles...")
-[object_list, color_list] = CreateObstacles(scene);
 
 % Plot all polygons
 plotMultiplePolygonsVertices(fig_handles(2), object_list, color_list)
@@ -54,9 +59,9 @@ plotMultiplePolygonsVertices(fig_handles(2), object_list, color_list)
 % boundary.x = [20, -20];
 % boundary.y = [10, -10];
 % boundary.z = [10, -10];
-boundary.x = [20, -20];
-boundary.y = [10, -10];
-boundary.z = [10, -10];
+boundary.x = [40, -40];
+boundary.y = [40, -40];
+boundary.z = [40, -40];
 boundary.vertices = createBoxVertices(boundary);
 boundary.faces = createBoxFaces(boundary.vertices);
 scatter3(fig_handles(2), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
@@ -68,9 +73,11 @@ viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(scene) + ")")
 %% LiDAR properties
 disp("- Loading LiDAR properties...")
 LiDAR_opts.noise_model = 1; % 1: simpleMechanicalNoiseModel
-LiDAR_opts.properties.rpm = 600;
+LiDAR_opts.properties.rpm = 300;
 LiDAR_opts.properties.range = 50;
+LiDAR_opts.properties.noise_enable = 1;
 LiDAR_opts.centriod = [0 0 0];
+LiDAR_opts.return_once = 0;
 LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
 [LiDAR_opts.properties.ring_elevation, ...
  LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);
@@ -113,13 +120,33 @@ plotOriginalAxis(fig_handles(4), 1, '-k')
 for object = 1:length(object_list)
     scatter3(fig_handles(4), [object_list(object).ring_points.x], ...
                              [object_list(object).ring_points.y], ...
-                             [object_list(object).ring_points.z], color_list(object), '.')
+                             [object_list(object).ring_points.z], '.', 'MarkerFaceColor',color_list{object})
     
     % Plot on separated plots
+    % Noisy-points
     scatter3(fig_handles(4+object), [object_list(object).ring_points.x], ...
                                     [object_list(object).ring_points.y], ...
-                                    [object_list(object).ring_points.z], color_list(object), '.')
-    plotConnectedVerticesStructure(fig_handles(4+object), object_list(object).object_vertices, 'b')
+                                    [object_list(object).ring_points.z], '.', 'MarkerFaceColor', color_list{object})
+    hold(fig_handles(4+object), 'on')
+
+    % Noise-less pionts
+%     scatter3(fig_handles(4+object), [object_list(object).noise_less_ring_points.x], ...
+%                                     [object_list(object).noise_less_ring_points.y], ...
+%                                     [object_list(object).noise_less_ring_points.z], '.y')
+    for ring = 1:LiDAR_opts.properties.beam
+        if isempty(object_list(object).ring_points(ring).x)
+            continue;
+        end
+        
+        text(fig_handles(4+object), mean([object_list(object).ring_points(ring).x]), ...
+                                    mean([object_list(object).ring_points(ring).y]), ...
+                                    mean([object_list(object).ring_points(ring).z]), "N-" + num2str(ring))
+        % Noise-less 
+%         text(fig_handles(4+object), min([object_list(object).noise_less_ring_points(ring).x]), ...
+%                                     min([object_list(object).noise_less_ring_points(ring).y]), ...
+%                                     min([object_list(object).noise_less_ring_points(ring).z]), num2str(ring))
+    end
+    plotConnectedVerticesStructure(fig_handles(4+object), object_list(object).object_vertices, color_list{object})
 end
 view_angle = [-86, 14];
 viewCurrentPlot(fig_handles(4), "Rings on Objects (Scene " + num2str(scene) + ")", view_angle)
@@ -162,21 +189,14 @@ end
 
 
 %% Intrinsic Calibration
-
-opts.method = 1; % Lie; Spherical
-opts.iterative = 1;
-opts.show_results = 1;
-
-
 opt_formulation = ["Lie","Spherical"]; % Lie or Spherical
 opts.num_scans = 1;
-opts.num_iters = 10;
+opts.num_iters = 5;
 opts.num_beams = LiDAR_opts.properties.beam;
 num_targets = length(object_list);
 
 if (opt_formulation(opts.method) == "Lie")
     data_split_with_ring_cartesian = cell(1,num_targets);
-    data_split_with_ring_cartesian_original = cell(1,num_targets);
     
     disp("Parsing data...")
     for t = 1:num_targets
@@ -193,7 +213,7 @@ if (opt_formulation(opts.method) == "Lie")
     distance(opts.num_iters).ring(opts.num_beams) = struct();
     for k = 1: opts.num_iters
         fprintf("--- Working on %i/%i\n", k, opts.num_iters)
-        [delta, plane, valid_rings_and_targets] = estimateIntrinsicLie(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring_cartesian);
+        [delta, plane, valid_rings_and_targets] = estimateIntrinsicLie(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring_cartesian, object_list);
         if k == 1
             distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
         end
@@ -210,11 +230,11 @@ elseif (opt_formulation(opts.method) == "Spherical")
 
     disp("Parsing data...")
     for t = 1:num_targets
-        spherical_data{t} = Cartesian2Spherical(object_list(t).ring_points.points_mat);
+        spherical_data{t} = Cartesian2Spherical(object_list(t).points_mat);
         data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams);
-        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).ring_points.points_mat, opts.num_beams);
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams);
     end
-    
+    data_split_with_ring_cartesian_original = data_split_with_ring_cartesian;
     disp("Optimizing using a mechanical model...")
     if ~opts.iterative
        opts.num_iters = 1;
@@ -225,7 +245,7 @@ elseif (opt_formulation(opts.method) == "Spherical")
      % iteratively optimize the intrinsic parameters
     for k = 1: opts.num_iters
         fprintf("--- Working on %i/%i\n", k, opts.num_iters)
-        [delta, plane, valid_rings_and_targets] = estimateIntrinsicFromMechanicalModel(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring, data_split_with_ring_cartesian);
+        [delta, plane, valid_rings_and_targets] = estimateIntrinsicFromMechanicalModel(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring, data_split_with_ring_cartesian, object_list);
         if k == 1
             distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
         end
@@ -239,16 +259,18 @@ end
 disp('Done optimization')
 
 
-%% show numerical results
+% show numerical results
 disp("Showing numerical results...")
 disp("Showing current estimate")
 results = struct('ring', {distance(end).ring(:).ring}, ...
                  'num_points', {distance(end).ring(:).num_points}, ...
                  'mean_original', {distance_original.ring(:).mean}, ...
-                 'std_original', {distance_original.ring(:).std}, ...
+                 'mean_calibrated', {distance(end).ring(:).mean}, ...
                  'mean_diff', num2cell([distance_original.ring(:).mean] - [distance(end).ring(:).mean]), ...
-                 'std_diff', num2cell([distance_original.ring(:).std] - [distance(end).ring(:).std]), ...
                  'mean_diff_in_mm', num2cell(([distance_original.ring(:).mean] - [distance(end).ring(:).mean]) * 1e3), ...
+                 'std_original', {distance_original.ring(:).std}, ...
+                 'std_calibrated', {distance(end).ring(:).std}, ...
+                 'std_diff', num2cell([distance_original.ring(:).std] - [distance(end).ring(:).std]), ...
                  'std_diff_in_mm', num2cell(([distance_original.ring(:).std] - [distance(end).ring(:).std])* 1e3));
 struct2table(distance(end).ring(:))
 disp("Showing comparison")
@@ -257,6 +279,34 @@ struct2table(results)
 % check if ring mis-ordered
 disp("If the rings are mis-ordered...")
 checkRingOrderWithOriginal(data_split_with_ring_cartesian_original, data_split_with_ring_cartesian, num_targets, opts.num_beams)
+
+
+%% Show graphical results
+if opts.show_results
+    disp("Now plotting....")
+    plotCalibratedResults(num_targets, plane, data_split_with_ring_cartesian, object_list);
+%     plotCalibratedResults(num_targets, plane, data_split_with_ring_cartesian, data, opt_formulation(opts.method));
+    disp("Done plotting!")
+end
+
+
+% Draw calibrated rings
+for object = 1:length(object_list)
+    for ring = 1:LiDAR_opts.properties.beam
+        if isempty( data_split_with_ring_cartesian{object}(ring).points)
+            continue;
+        end
+        offset_color = max(1, mod(object+1, length(object_list)));
+        scatter3(fig_handles(4+object), data_split_with_ring_cartesian{object}(ring).points(1,:),...
+                             data_split_with_ring_cartesian{object}(ring).points(2,:),...
+                             data_split_with_ring_cartesian{object}(ring).points(3,:),...
+                             50, '.', 'MarkerFaceColor', color_list{offset_color})
+                         
+         text(fig_handles(4+object), mean(data_split_with_ring_cartesian{object}(ring).points(1,:)), ...
+                                     mean(data_split_with_ring_cartesian{object}(ring).points(2,:)), ...
+                                     mean(data_split_with_ring_cartesian{object}(ring).points(3,:)), "C"+num2str(ring-1))
+    end
+end
 
 
 fprintf("\n\n\n")
