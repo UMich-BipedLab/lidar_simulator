@@ -103,10 +103,10 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
     range = LiDAR_opts.properties.range;
     num_beam = LiDAR_opts.properties.beam;
     num_obj = length(objects);
-    lidadr_centroid = LiDAR_opts.centriod;
+    LiDAR_centroid = LiDAR_opts.centriod;
     
-    if ~iscolumn(lidadr_centroid)
-        lidadr_centroid = lidadr_centroid';
+    if ~iscolumn(LiDAR_centroid)
+        LiDAR_centroid = LiDAR_centroid';
     end
     
     num_points = floor(2*pi/resolution);
@@ -124,7 +124,13 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             LiDAR_points(ring_num).objects(obj).points.z = [];
             LiDAR_points(ring_num).objects(obj).points.I = [];
             LiDAR_points(ring_num).objects(obj).points.R = [];
+            LiDAR_points(ring_num).objects(obj).noiseless_points.x = [];
+            LiDAR_points(ring_num).objects(obj).noiseless_points.y = [];
+            LiDAR_points(ring_num).objects(obj).noiseless_points.z = [];
+            LiDAR_points(ring_num).objects(obj).noiseless_points.I = [];
+            LiDAR_points(ring_num).objects(obj).noiseless_points.R = [];
             closest_point(ring_num).objects(obj).point = [];
+            closest_point(ring_num).objects(obj).noiseless_points = [];
             closest_point(ring_num).objects(obj).distance = [];
         end
         LiDAR_points(ring_num).points.x = [];
@@ -138,26 +144,36 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
 %     for ring_num = 1:num_beam
     parfor ring_num = 1:num_beam
         LiDAR_opts_tmp =  LiDAR_opts; % make parfor more efficient
-        % Noise model for this ring
-        noise_range = LiDAR_points(ring_num).noise_model.range_noise;
-        noise_az = LiDAR_points(ring_num).noise_model.az_noise;
-        noise_el = LiDAR_points(ring_num).noise_model.el_noise;
-        
+        % Noise from LiDAR's mechanical model for this ring
+%         noise_range = LiDAR_points(ring_num).noise_model.range_noise;
+%         noise_az = LiDAR_points(ring_num).noise_model.az_noise;
+%         noise_el = LiDAR_points(ring_num).noise_model.el_noise;
+%         [model_noisy_x, model_noisy_y, model_noisy_z] = sph2cart(noise_az, noise_el, noise_range);
+        model_noisy_x = LiDAR_points(ring_num).noise_model.x;
+        model_noisy_y = LiDAR_points(ring_num).noise_model.y;
+        model_noisy_z = LiDAR_points(ring_num).noise_model.z;       
+
+
         % Elevatoin angle for this ring
         elevation = deg2rad(LiDAR_opts_tmp.properties.ring_elevation(ring_num).angle);
         points = zeros(5, num_points); % X Y Z I R
-
+        
         for i = 1 : num_points
             azimuth = (i-1) * resolution;
 %             fprintf("ring_num: %i; point_num: %i\n", ring_num, i)
-
-            %% Apply model noise (Biases of the system)
-            [x, y, z] = sph2cart(azimuth + deg2rad(noise_az), ...
-                                 elevation + deg2rad(noise_el),...
-                                 range + deg2rad(noise_range));
+            [x, y, z] = sph2cart(azimuth, elevation, range);
             point = [x; y; z];
-            point = point + lidadr_centroid; 
-            point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
+            point = point + LiDAR_centroid; 
+            point = limitInBoundaryWithBoundaryPlanes(point, LiDAR_centroid, boundary);
+            
+            % Apply model noise (Biases of the system)
+%             [noisy_x, noisy_y noisy_z] = sph2cart(azimuth + deg2rad(noise_az), ...
+%                                                    elevation + deg2rad(noise_el),...
+%                                                    range + deg2rad(noise_range));
+%             noisy_point = [noisy_x; noisy_y; noisy_z];
+%             noisy_point = noisy_point + LiDAR_centroid; 
+%             noisy_point = limitInBoundaryWithBoundaryPlanes(noisy_point, LiDAR_centroid, boundary);
+                                                 
 %             point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
 
             
@@ -173,20 +189,41 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                 % one point can only assign to one object (the closest
                 % one). 
                 % The distance is without noise (raw projection point)
+%                 closest_point(ring_num).objects(object).distance = range;
+%                 [noiseless_point, status]= checkInsidePolygonGiven3DPoints(objects(object), LiDAR_centroid, point);
+%                 if status
+%                     closest_point(ring_num).objects(object).distance = noiseless_point.distance;
+%                     
+%                     % Apply noise from LiDAR's mechanical model and sensor
+%                     % noise 
+%                     noisy_point = [noiseless_point.point(1) + rand_x + model_noisy_x;...
+%                                    noiseless_point.point(2) + rand_y + model_noisy_y;...
+%                                    noiseless_point.point(3) + rand_z + model_noisy_z;...
+%                                    255; ring_num];
+%                     closest_point(ring_num).objects(object).point = noisy_point;
+%                 end
                 closest_point(ring_num).objects(object).distance = range;
-                [point_on_plane, ~, intersect] = findIntersectionOfPlaneAndLine(objects(object).object_vertices, ...
-                                                                                lidadr_centroid, point);
+                [point_on_plane, ~, intersect] = findIntersectionOfPlaneAndLine(objects(object), ...
+                                                                                LiDAR_centroid, point);
                 
                 if intersect == 1
                     [~, in] = checkInsidePolygon(objects(object).object_vertices, point_on_plane);
                     if in
                         flag_on_an_object = 1;
 %                         point_on_plane = limitInBoundaryWithMaxMin(point_on_plane, boundary); % check boundary
-                        noisy_point_on_plane = point_on_plane + [rand_x; rand_y; rand_z]; % add noise
                         closest_point(ring_num).objects(object).distance = norm(point_on_plane);
                         
                         % Assign intensity and ring number
-                        noisy_point_on_plane = [noisy_point_on_plane; 255; ring_num];
+                        point_on_plane = [point_on_plane; 255; ring_num];
+                        closest_point(ring_num).objects(object).noiseless_point = point_on_plane;
+                        
+                        
+                        % add noise
+                        noisy_point_on_plane = point_on_plane + ...
+                                               [rand_x + model_noisy_x; ...
+                                                rand_y + model_noisy_y; ...
+                                                rand_z + model_noisy_z;
+                                                0; 0];  % intensity and ring number
                         closest_point(ring_num).objects(object).point = noisy_point_on_plane;
                     end
 %                     in_polygon = inhull(I, objects(object));
@@ -194,24 +231,77 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             end
             
             % Assigne the point to the closest one if happens
-            if flag_on_an_object
+            if flag_on_an_object && LiDAR_opts.return_once
                 [~,  which_object] = min([closest_point(ring_num).objects(:).distance]);
+                current_point = closest_point(ring_num).objects(which_object).point;
                 LiDAR_points(ring_num).objects(which_object).points.x = [LiDAR_points(ring_num).objects(which_object).points.x ...
-                                                                         closest_point(ring_num).objects(which_object).point(1)];
+                                                                         current_point(1)];
                 LiDAR_points(ring_num).objects(which_object).points.y = [LiDAR_points(ring_num).objects(which_object).points.y ...
-                                                                         closest_point(ring_num).objects(which_object).point(2)];
+                                                                         current_point(2)];
                 LiDAR_points(ring_num).objects(which_object).points.z = [LiDAR_points(ring_num).objects(which_object).points.z ...
-                                                                         closest_point(ring_num).objects(which_object).point(3)];
+                                                                         current_point(3)];
                 LiDAR_points(ring_num).objects(which_object).points.I = [LiDAR_points(ring_num).objects(which_object).points.I ...
-                                                                         closest_point(ring_num).objects(which_object).point(4)];
+                                                                         current_point(4)];
                 LiDAR_points(ring_num).objects(which_object).points.R = [LiDAR_points(ring_num).objects(which_object).points.R ...
-                                                                         closest_point(ring_num).objects(which_object).point(5)];
-                points(:, i) = closest_point(ring_num).objects(which_object).point;                                                      
+                                                                         current_point(5)];
+                % Noise-free points <Only used to compare against to it>
+                current_noiseless_point = closest_point(ring_num).objects(which_object).noiseless_point;
+                LiDAR_points(ring_num).objects(which_object).noiseless_points.x = [LiDAR_points(ring_num).objects(which_object).noiseless_points.x ...
+                                                                         current_noiseless_point(1)];
+                LiDAR_points(ring_num).objects(which_object).noiseless_points.y = [LiDAR_points(ring_num).objects(which_object).noiseless_points.y ...
+                                                                         current_noiseless_point(2)];
+                LiDAR_points(ring_num).objects(which_object).noiseless_points.z = [LiDAR_points(ring_num).objects(which_object).noiseless_points.z ...
+                                                                         current_noiseless_point(3)];
+                LiDAR_points(ring_num).objects(which_object).noiseless_points.I = [LiDAR_points(ring_num).objects(which_object).noiseless_points.I ...
+                                                                         current_noiseless_point(4)];
+                LiDAR_points(ring_num).objects(which_object).noiseless_points.R = [LiDAR_points(ring_num).objects(which_object).noiseless_points.R ...
+                                                                         current_noiseless_point(5)];                                                     
+                                                                     
+                points(:, i) = current_point;
+            elseif flag_on_an_object && ~LiDAR_opts.return_once
+                [~,  which_object] = min([closest_point(ring_num).objects(:).distance]);
+                current_point = closest_point(ring_num).objects(which_object).point;
+                points(:, i) = current_point;
+                
+                for object = 1:num_obj
+                    if isempty(closest_point(ring_num).objects(object).point)
+                        continue
+                    end
+                    LiDAR_points(ring_num).objects(object).points.x = [LiDAR_points(ring_num).objects(object).points.x, ...
+                                                                       closest_point(ring_num).objects(object).point(1)];
+                                                                   
+                    LiDAR_points(ring_num).objects(object).points.y = [LiDAR_points(ring_num).objects(object).points.y, ...
+                                                                       closest_point(ring_num).objects(object).point(2)];
+                                                                   
+                    LiDAR_points(ring_num).objects(object).points.z = [LiDAR_points(ring_num).objects(object).points.z, ...
+                                                                       closest_point(ring_num).objects(object).point(3)];
+                                                                   
+                    LiDAR_points(ring_num).objects(object).points.I = [LiDAR_points(ring_num).objects(object).points.I, ...
+                                                                       closest_point(ring_num).objects(object).point(4)];
+                                                                   
+                    LiDAR_points(ring_num).objects(object).points.R = [LiDAR_points(ring_num).objects(object).points.R, ...
+                                                                       closest_point(ring_num).objects(object).point(5)];
+                    
+                    % Noise-free points <Only used to compare against to it>
+                    LiDAR_points(ring_num).objects(object).noiseless_points.x = [LiDAR_points(ring_num).objects(object).noiseless_points.x, ...
+                                                                                 closest_point(ring_num).objects(object).noiseless_point(1)];
+                    LiDAR_points(ring_num).objects(object).noiseless_points.y = [LiDAR_points(ring_num).objects(object).noiseless_points.y, ...
+                                                                                 closest_point(ring_num).objects(object).noiseless_point(2)];
+                    LiDAR_points(ring_num).objects(object).noiseless_points.z = [LiDAR_points(ring_num).objects(object).noiseless_points.z, ...
+                                                                                 closest_point(ring_num).objects(object).noiseless_point(3)];
+                    LiDAR_points(ring_num).objects(object).noiseless_points.I = [LiDAR_points(ring_num).objects(object).noiseless_points.I, ...
+                                                                                 closest_point(ring_num).objects(object).noiseless_point(4)];
+                    LiDAR_points(ring_num).objects(object).noiseless_points.R = [LiDAR_points(ring_num).objects(object).noiseless_points.R, ...
+                                                                                 closest_point(ring_num).objects(object).noiseless_point(5)];
+                end
             else
 %                 point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
-%                 point = limitInBoundaryWithBoundaryPlanes(point, lidadr_centroid, boundary);
-                point = [point; 255; ring_num];
-                points(:, i) = point;
+%                 point = limitInBoundaryWithBoundaryPlanes(point, LiDAR_centroid, boundary);
+                noisy_point = [point(1) + rand_x + model_noisy_x;...
+                               point(2) + rand_y + model_noisy_y;...
+                               point(3) + rand_z + model_noisy_z;...
+                               255; ring_num];
+                points(:, i) = noisy_point;
             end
 %             scatter3(point(1), point(2), point(3), '.')
 %             hold on
@@ -235,12 +325,20 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             objects(object).ring_points(ring_num).z = LiDAR_points(ring_num).objects(object).points.z;
             objects(object).ring_points(ring_num).I = LiDAR_points(ring_num).objects(object).points.I;
             objects(object).ring_points(ring_num).R = LiDAR_points(ring_num).objects(object).points.R;
+
             points = [makeRow(LiDAR_points(ring_num).objects(object).points.x); ...
                       makeRow(LiDAR_points(ring_num).objects(object).points.y); ...
                       makeRow(LiDAR_points(ring_num).objects(object).points.z); ...
                       makeRow(LiDAR_points(ring_num).objects(object).points.I); ...
                       makeRow(LiDAR_points(ring_num).objects(object).points.R)];
             objects(object).points_mat = [objects(object).points_mat, points];
+                        
+            % Noise-free points <Only used to compare against to it>
+            objects(object).noise_less_ring_points(ring_num).x = LiDAR_points(ring_num).objects(object).noiseless_points.x;
+            objects(object).noise_less_ring_points(ring_num).y = LiDAR_points(ring_num).objects(object).noiseless_points.y;
+            objects(object).noise_less_ring_points(ring_num).z = LiDAR_points(ring_num).objects(object).noiseless_points.z;
+            objects(object).noise_less_ring_points(ring_num).I = LiDAR_points(ring_num).objects(object).noiseless_points.I;
+            objects(object).noise_less_ring_points(ring_num).R = LiDAR_points(ring_num).objects(object).noiseless_points.R;
         end
 
     end
@@ -254,8 +352,3 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                                                    LiDAR_points(ring_num).points.z];
     end
 end
-
-
-
-
-
