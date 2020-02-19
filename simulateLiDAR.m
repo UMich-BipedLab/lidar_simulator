@@ -140,7 +140,8 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         LiDAR_points(ring_num).points.R = [];
         LiDAR_points(ring_num).noise_model = genLiDARNoiseModel(ring_num, LiDAR_opts);
     end
-
+    rng(1);
+    noise_table = -0.1 + 0.2.*rand(3,num_beam);
 %     for ring_num = 1:num_beam
     parfor ring_num = 1:num_beam
         LiDAR_opts_tmp =  LiDAR_opts; % make parfor more efficient
@@ -149,11 +150,13 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
 %         noise_az = LiDAR_points(ring_num).noise_model.az_noise;
 %         noise_el = LiDAR_points(ring_num).noise_model.el_noise;
 %         [model_noisy_x, model_noisy_y, model_noisy_z] = sph2cart(noise_az, noise_el, noise_range);
-        model_noisy_x = LiDAR_points(ring_num).noise_model.x;
-        model_noisy_y = LiDAR_points(ring_num).noise_model.y;
-        model_noisy_z = LiDAR_points(ring_num).noise_model.z;       
-
-
+%         model_noisy_x = LiDAR_points(ring_num).noise_model.x;
+%         model_noisy_y = LiDAR_points(ring_num).noise_model.y;
+%         model_noisy_z = LiDAR_points(ring_num).noise_model.z;
+           
+        model_noisy_x = noise_table(1,ring_num);
+        model_noisy_y = noise_table(2,ring_num);
+        model_noisy_z = noise_table(3,ring_num);
         % Elevatoin angle for this ring
         elevation = deg2rad(LiDAR_opts_tmp.properties.ring_elevation(ring_num).angle);
         points = zeros(5, num_points); % X Y Z I R
