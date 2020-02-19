@@ -1,12 +1,12 @@
-function [object_list, color_list] = getScene8()    
+function [object_list, color_list] = getScene9()    
     %% Description: 
     %To show the scaling constraint  
-    %4 medium targets list in a line, on the same side of the lidar
+    %2 medium targets list in a line, on the both side of the lidar
     
     
 
     %% Create object list
-    num_obj = 3;    
+    num_obj = 2;    
     object_list(num_obj).object_vertices = struct();
     color_list = getColors(num_obj);
     
@@ -38,13 +38,9 @@ function [object_list, color_list] = getScene8()
     object2_mat_h = converToHomogeneousCoord(object2_mat);
 
     rpy = [0 0 0]; % in degree
-    xyz = [10, 0, 0];
+    xyz = [-10, 0, 0.1];
     moved_obj2_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
     object_list(2).object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
 
-    rpy = [0 0 0]; % in degree
-    xyz = [18, 0, 0];
-    moved_obj3_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    object_list(3).object_vertices = convertXYZmatrixToXYZstruct(moved_obj3_mat_h);
 
 end
