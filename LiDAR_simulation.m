@@ -39,7 +39,7 @@ addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_lat
 opts.save_path = "./results/";
 
 % Intrinsic calibration 
-opts.method = 2; % Lie; Spherical
+opts.method = 1; % Lie; Spherical
 opts.iterative = 0;
 opts.show_results = 0;
 
@@ -213,7 +213,7 @@ if (opt_formulation(opts.method) == "Lie")
     
     distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
     distance(opts.num_iters).ring(opts.num_beams) = struct();
-%     distance(opts.num_iters).mean = 0;
+    distance(opts.num_iters).mean = 0;
     
     for k = 1: opts.num_iters
         fprintf("--- Working on %i/%i\n", k, opts.num_iters)
@@ -222,7 +222,7 @@ if (opt_formulation(opts.method) == "Lie")
             distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
         end
         % update the corrected points
-        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring_cartesian, delta, valid_rings_and_targets, opt_formulation(opts.method));
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring_cartesian, delta, opt_formulation(opts.method));
         distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
     end
 
@@ -245,7 +245,7 @@ elseif (opt_formulation(opts.method) == "Spherical")
     end
     distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
     distance(opts.num_iters).ring(opts.num_beams) = struct(); 
-%     distance(opts.num_iters).mean = 0;
+    distance(opts.num_iters).mean = 0;
     
      % iteratively optimize the intrinsic parameters
     for k = 1: opts.num_iters
@@ -257,7 +257,7 @@ elseif (opt_formulation(opts.method) == "Spherical")
         
         % update the corrected points
         data_split_with_ring = updateDatacFromMechanicalModel(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets);
-        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets, opt_formulation(opts.method));
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, opt_formulation(opts.method));
         distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
     end
 end
