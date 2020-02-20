@@ -1,5 +1,5 @@
 function ring_noise_model = genLiDARNoiseModel(ring_number, LiDAR_opts)
-    switch LiDAR_opts.mechanics_noise_model
+    switch LiDAR_opts.properties.mechanics_noise_model
         case 0
             ring_noise_model = noSimpleMechanicalNoiseModel(ring_number, LiDAR_opts);
         case 1

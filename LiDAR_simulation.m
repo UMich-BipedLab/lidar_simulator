@@ -75,12 +75,12 @@ viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(scene) + ")")
 
 %% LiDAR properties
 disp("- Loading LiDAR properties...")
-LiDAR_opts.mechanics_noise_model = 0; % 1: simpleMechanicalNoiseModel
+LiDAR_opts.properties.mechanics_noise_model = 0; % 1: simpleMechanicalNoiseModel
+LiDAR_opts.properties.sensor_noise_enable = 0;
 LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
 LiDAR_opts.properties.range = 50;
-LiDAR_opts.properties.sensor_noise_enable = 0;
+LiDAR_opts.properties.return_once = 0;
 LiDAR_opts.centriod = [0 0 0];
-LiDAR_opts.return_once = 0;
 LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
 [LiDAR_opts.properties.ring_elevation, ...
  LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);

@@ -234,7 +234,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             end
             
             % Assigne the point to the closest one if happens
-            if flag_on_an_object && LiDAR_opts.return_once
+            if flag_on_an_object && LiDAR_opts.properties.return_once
                 [~,  which_object] = min([closest_point(ring_num).objects(:).distance]);
                 current_point = closest_point(ring_num).objects(which_object).point;
                 LiDAR_points(ring_num).objects(which_object).points.x = [LiDAR_points(ring_num).objects(which_object).points.x ...
@@ -261,7 +261,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                                                                          current_noiseless_point(5)];                                                     
                                                                      
                 points(:, i) = current_point;
-            elseif flag_on_an_object && ~LiDAR_opts.return_once
+            elseif flag_on_an_object && ~LiDAR_opts.properties.return_once
                 [~,  which_object] = min([closest_point(ring_num).objects(:).distance]);
                 current_point = closest_point(ring_num).objects(which_object).point;
                 points(:, i) = current_point;
