@@ -33,7 +33,10 @@
 clear, clc
 scene = 8; % Scene number
 show_statistics = 1;
-addpath('..\extrinsic_lidar_camera_calibration\')
+% addpath('..\extrinsic_lidar_camera_calibration\')
+% opts.save_path = ".\results\";
+addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
+opts.save_path = "./results/";
 
 % Intrinsic calibration 
 opts.method = 1; % Lie; Spherical
@@ -259,9 +262,12 @@ elseif (opt_formulation(opts.method) == "Spherical")
     end
 end
 disp('Done optimization')
-filename = strcat('.\results\parameter',num2str(scene),'.mat');
-save(filename, 'delta');
 
+if ~exist(opts.save_path,'dir') 
+    mkdir(opts.save_path); 
+end
+filename = opts.save_path + "parameter" + num2str(scene) + ".mat";
+save(filename, 'delta');
 %% show numerical results
 disp("Showing numerical results...")
 disp("Showing current estimate")
