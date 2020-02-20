@@ -5,9 +5,12 @@ clear; clc
 t_scene = 8; %training scene
 v_scene = 13; %validation scene
 show_statistics = 1;
-addpath('..\extrinsic_lidar_camera_calibration\')
+% addpath('..\extrinsic_lidar_camera_calibration\')
+% opts.load_path = ".\results\";
+addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
+opts.load_path = "./results/";
 
-filename = strcat('.\results\parameter',num2str(t_scene),'.mat');
+filename = opts.load_path + "parameter" + num2str(t_scene) + ".mat";
 load(filename);
 fprintf("Calibration parameter from scene %i is loaded! \n", t_scene);
 
