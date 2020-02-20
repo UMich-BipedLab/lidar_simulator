@@ -43,7 +43,7 @@ function properties = loadVelodyneUltraPuckV2(properties)
     %             properties.noise_sigma = [0.1, 0.1, 0.1]; % under 50m
     %             properties.noise_sigma = [0.2, 0.2, 0.2]; % 50m to 200m
     
-    if properties.noise_enable
+    if properties.sensor_noise_enable
         properties.noise_sigma = [0.05    0.008   0.005];
     else
         properties.noise_sigma = [0, 0, 0];
