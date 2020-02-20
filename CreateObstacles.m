@@ -50,6 +50,16 @@ function [object_list, color_list] = CreateObstacles(scene)
             [object_list, color_list] = getScene7();
         case 8
             [object_list, color_list] = getScene8();
+        case 9
+            [object_list, color_list] = getScene9();
+        case 10
+            [object_list, color_list] = getScene10();
+        case 11
+            [object_list, color_list] = getScene11();
+        case 12
+            [object_list, color_list] = getScene12();
+        case 13
+            [object_list, color_list] = getScene13();
         otherwise
             error("iInexist scene: #%i", scene)
     end

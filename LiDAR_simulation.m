@@ -31,13 +31,13 @@
 
 %% General parameters
 clear, clc
-scene = 1; % Scene number
+scene = 8; % Scene number
 show_statistics = 1;
-addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
+addpath('..\extrinsic_lidar_camera_calibration\')
 
 % Intrinsic calibration 
 opts.method = 1; % Lie; Spherical
-opts.iterative = 1;
+opts.iterative = 0;
 opts.show_results = 0;
 
 
@@ -210,6 +210,8 @@ if (opt_formulation(opts.method) == "Lie")
     
     distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
     distance(opts.num_iters).ring(opts.num_beams) = struct();
+    distance(opts.num_iters).mean = 0;
+    
     for k = 1: opts.num_iters
         fprintf("--- Working on %i/%i\n", k, opts.num_iters)
         [delta, plane, valid_rings_and_targets] = estimateIntrinsicLie(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring_cartesian, object_list);
@@ -217,7 +219,7 @@ if (opt_formulation(opts.method) == "Lie")
             distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
         end
         % update the corrected points
-        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring_cartesian, delta, valid_rings_and_targets, opt_formulation(opts.method));
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring_cartesian, delta, opt_formulation(opts.method));
         distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
     end
 
@@ -240,6 +242,7 @@ elseif (opt_formulation(opts.method) == "Spherical")
     end
     distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
     distance(opts.num_iters).ring(opts.num_beams) = struct(); 
+    distance(opts.num_iters).mean = 0;
     
      % iteratively optimize the intrinsic parameters
     for k = 1: opts.num_iters
@@ -256,9 +259,10 @@ elseif (opt_formulation(opts.method) == "Spherical")
     end
 end
 disp('Done optimization')
+filename = strcat('.\results\parameter',num2str(scene),'.mat');
+save(filename, 'delta');
 
-
-% show numerical results
+%% show numerical results
 disp("Showing numerical results...")
 disp("Showing current estimate")
 results = struct('ring', {distance(end).ring(:).ring}, ...
@@ -266,6 +270,7 @@ results = struct('ring', {distance(end).ring(:).ring}, ...
                  'mean_original', {distance_original.ring(:).mean}, ...
                  'mean_calibrated', {distance(end).ring(:).mean}, ...
                  'mean_diff', num2cell([distance_original.ring(:).mean] - [distance(end).ring(:).mean]), ...
+                 'mean_percentage', num2cell((abs([distance_original.ring(:).mean]) - abs([distance(end).ring(:).mean])) ./ abs([distance_original.ring(:).mean])), ...
                  'mean_diff_in_mm', num2cell(([distance_original.ring(:).mean] - [distance(end).ring(:).mean]) * 1e3), ...
                  'std_original', {distance_original.ring(:).std}, ...
                  'std_calibrated', {distance(end).ring(:).std}, ...
