@@ -1,67 +1,71 @@
 %validation
 %General parameters
-clear; clc
+clc
 
-t_scene = 8; %training scene
+t_scene = 13; %training scene
 v_scene = 13; %validation scene
+
+opt_formulation = ["Lie","Spherical"];
+opt_method = opt_formulation(2);
+
 show_statistics = 1;
-% addpath('..\extrinsic_lidar_camera_calibration\')
-% opts.load_path = ".\results\";
-addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
-opts.load_path = "./results/";
+addpath('..\extrinsic_lidar_camera_calibration\')
+opts.load_path = ".\results_me\scene" + num2str(t_scene)+"\";
+% addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
+% opts.load_path = "./results/";
 
 filename = opts.load_path + "parameter" + num2str(t_scene) + ".mat";
 load(filename);
 fprintf("Calibration parameter from scene %i is loaded! \n", t_scene);
 
-% Create objects
-disp("- Generating obstacles...")
-[object_list, color_list] = CreateObstacles(v_scene);
-
-
-% Plotting parameters
-num_handles = length(object_list) + 5;
-start_number = 1;
-name = "testing";
-fig_handles = createFigHandleWithNumber(num_handles, start_number, name);
-
-% Plot all polygons
-plotMultiplePolygonsVertices(fig_handles(2), object_list, color_list)
-
-% Workspace boundary
-% boundary.x = [20, -20];
-% boundary.y = [10, -10];
-% boundary.z = [10, -10];
-boundary.x = [40, -40];
-boundary.y = [40, -40];
-boundary.z = [40, -40];
-boundary.vertices = createBoxVertices(boundary);
-boundary.faces = createBoxFaces(boundary.vertices);
-scatter3(fig_handles(2), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
-
-plotOriginalAxis(fig_handles(2), 1)
-viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(v_scene) + ")")
-
-%% LiDAR properties
-disp("- Loading LiDAR properties...")
-LiDAR_opts.noise_model = 1; % 1: simpleMechanicalNoiseModel
-LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
-LiDAR_opts.properties.range = 50;
-LiDAR_opts.properties.noise_enable = 0;
-LiDAR_opts.centriod = [0 0 0];
-LiDAR_opts.return_once = 0;
-LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
-[LiDAR_opts.properties.ring_elevation, ...
-LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);
-
-
-%% Simulate environment
-disp("- Simulating LiDAR environment given provided obstacles...")
-[object_list, LiDAR_ring_points, all_points]= simulateLiDAR(object_list, boundary, LiDAR_opts);
+%% Create objects
+% disp("- Generating obstacles...")
+% [object_list, color_list] = CreateObstacles(v_scene);
+% 
+% 
+% % Plotting parameters
+% num_handles = length(object_list) + 5;
+% start_number = 1;
+% name = "testing";
+% fig_handles = createFigHandleWithNumber(num_handles, start_number, name);
+% 
+% % Plot all polygons
+% plotMultiplePolygonsVertices(fig_handles(2), object_list, color_list)
+% 
+% % Workspace boundary
+% % boundary.x = [20, -20];
+% % boundary.y = [10, -10];
+% % boundary.z = [10, -10];
+% boundary.x = [40, -40];
+% boundary.y = [40, -40];
+% boundary.z = [40, -40];
+% boundary.vertices = createBoxVertices(boundary);
+% boundary.faces = createBoxFaces(boundary.vertices);
+% scatter3(fig_handles(2), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
+% 
+% plotOriginalAxis(fig_handles(2), 1)
+% viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(v_scene) + ")")
+% 
+% %% LiDAR properties
+% disp("- Loading LiDAR properties...")
+% LiDAR_opts.properties.mechanics_noise_model = 0; % 1: simpleMechanicalNoiseModel
+% LiDAR_opts.properties.sensor_noise_enable = 0;
+% LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
+% LiDAR_opts.properties.range = 50;
+% LiDAR_opts.properties.return_once = 0;
+% LiDAR_opts.centriod = [0 0 0];
+% LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
+% [LiDAR_opts.properties.ring_elevation, ...
+% LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);
+% 
+% 
+% %% Simulate environment
+% disp("- Simulating LiDAR environment given provided obstacles...")
+% [object_list, LiDAR_ring_points, all_points]= simulateLiDAR(object_list, boundary, LiDAR_opts);
 
 %% Calibrate point clouds
 disp("~ Calibrating LiDAR Point clouds")
-[object_list, LiDAR_ring_points] = simulateCalibratedLiDAR(object_list,LiDAR_ring_points,LiDAR_opts, delta);
+[object_list_calibrated, LiDAR_ring_points_calibrated] = simulateCalibratedLiDAR(object_list,LiDAR_ring_points,LiDAR_opts, delta, opt_method);
 
 %% Plotting simulation
 disp("- Drawing simulated LiDAR environment...")
@@ -82,16 +86,19 @@ for beam_num = 1:LiDAR_opts.properties.beam
 end
 
 
-plotMultiplePolygonsVertices(fig_handles(3), object_list, color_list)
+plotMultiplePolygonsVertices(fig_handles(3), object_list_calibrated, color_list)
 plotOriginalAxis(fig_handles(3), 1, '-k')
 viewCurrentPlot(fig_handles(3), "LiDAR simulation (Scene " + num2str(v_scene) + ")")
 set(fig_handles(3), 'visible', 'off')
 set(fig_handles(3), 'Color', 'b')
 
+saveas(fig_handles(2),strcat(opts.load_path,'ValidateScene', num2str(1),'.fig'));
+saveas(fig_handles(3),strcat(opts.load_path,'ValidateScene', num2str(2),'.fig'));
+saveas(fig_handles(4),strcat(opts.load_path,'ValidateScene', num2str(3),'.fig'));
 % Plotting points on polygons
 % cla(fig_handle(4))
 disp("- Drawing points on obstacles...")
-plotMultiplePolygonsVertices(fig_handles(4), object_list, color_list)
+plotMultiplePolygonsVertices(fig_handles(4), object_list_calibrated, color_list)
 % scatter3(fig_handle(4), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
 plotOriginalAxis(fig_handles(4), 1, '-k')
 for object = 1:length(object_list)
@@ -99,18 +106,18 @@ for object = 1:length(object_list)
                              [object_list(object).ring_points.y], ...
                              [object_list(object).ring_points.z], '.', 'MarkerFaceColor',color_list{object})
     hold(fig_handles(4), 'on')
-    scatter3(fig_handles(4), [object_list(object).calibrated_ring_points.x], ...
-                         [object_list(object).calibrated_ring_points.y], ...
-                         [object_list(object).calibrated_ring_points.z], 'x', 'MarkerFaceColor',color_list{object})
+    scatter3(fig_handles(4), [object_list_calibrated(object).calibrated_ring_points.x], ...
+                         [object_list_calibrated(object).calibrated_ring_points.y], ...
+                         [object_list_calibrated(object).calibrated_ring_points.z], 'x', 'MarkerFaceColor',color_list{object})
     % Plot on separated plots
     % Noisy-points
     scatter3(fig_handles(4+object), [object_list(object).ring_points.x], ...
                                     [object_list(object).ring_points.y], ...
                                     [object_list(object).ring_points.z], '.', 'MarkerFaceColor', color_list{object})
     hold(fig_handles(4+object), 'on')
-    scatter3(fig_handles(4+object), [object_list(object).calibrated_ring_points.x], ...
-                                    [object_list(object).calibrated_ring_points.y], ...
-                                    [object_list(object).calibrated_ring_points.z], 'x', 'MarkerFaceColor', color_list{object})   
+    scatter3(fig_handles(4+object), [object_list_calibrated(object).calibrated_ring_points.x], ...
+                                    [object_list_calibrated(object).calibrated_ring_points.y], ...
+                                    [object_list_calibrated(object).calibrated_ring_points.z], 'x', 'MarkerFaceColor', color_list{object})   
     
     hold(fig_handles(4+object), 'on')
 
@@ -138,6 +145,7 @@ viewCurrentPlot(fig_handles(4), "Rings on Objects (Scene " + num2str(v_scene) + 
 view_angle = [90, 0];
 for object = 1:length(object_list)
     viewCurrentPlot(fig_handles(4+object), "Object 1 (Scene " + num2str(v_scene) + ")", view_angle)
+    saveas(fig_handles(4+object),strcat(opts.load_path,'validateobj', num2str(object),'.fig'));
 end
 
 if show_statistics
@@ -180,7 +188,7 @@ plane = cell(1,num_targets);
 
 for t = 1:length(object_list)
     data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, LiDAR_opts.properties.beam);
-    calibrated_data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).calibrated_points_mat, LiDAR_opts.properties.beam);
+    calibrated_data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list_calibrated(t).calibrated_points_mat, LiDAR_opts.properties.beam);
     plane{t}.centroid =  [object_list(t).centroid; 1];
     plane{t}.normals =  object_list(t).normal;
     plane{t}.unit_normals = object_list(t).normal/(norm(object_list(t).normal));
@@ -201,3 +209,4 @@ results = struct('ring', {distance_original(1).ring(:).ring}, ...
 struct2table(distance_calibrated(1).ring(:))
 disp("Showing comparison")
 struct2table(results)
+save(opts.load_path + "data.mat", 'results');
