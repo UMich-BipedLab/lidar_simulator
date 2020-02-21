@@ -30,7 +30,7 @@ function [object_list, color_list] = getScene11()
     object1_mat = convertXYZstructToXYZmatrix(objects1);
     object1_mat_h = converToHomogeneousCoord(object1_mat);
     rpy = [0 0 0]; % in degree
-    xyz = [5, 0, -20];
+    xyz = [5, 0, 0];
     moved_obj1_mat_h = moveByRPYXYZ(object1_mat_h, rpy, xyz);
     object_list(1).object_vertices = convertXYZmatrixToXYZstruct(moved_obj1_mat_h);
 

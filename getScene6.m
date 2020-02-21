@@ -38,14 +38,14 @@ function [object_list, color_list] = getScene6()
     
 
     %% Create object list
-    num_obj = 4;    
+    num_obj = 12;    
     object_list(num_obj).object_vertices = struct();
     color_list = getColors(num_obj);
     
     %% Create objects
-    objects1 = genShape("polygon", 0.5, 4);
-    objects2 = genShape("polygon", 1.2, 5);
-    objects3 = genShape("polygon", 1.8, 6);
+    objects1 = genShape("polygon", 1.2, 4);
+    objects2 = genShape("polygon", 1.0, 5);
+    objects3 = genShape("polygon", 0.8, 6);
     
     % Plot original polygon (2D)
     % pgon = polyshape(objects1.y, objects1.z);
@@ -61,30 +61,71 @@ function [object_list, color_list] = getScene6()
     % Move Object1
     object1_mat = convertXYZstructToXYZmatrix(objects1);
     object1_mat_h = converToHomogeneousCoord(object1_mat);
-    rpy = [10 0 45]; % in degree
+    rpy = [0 0 20]; % in degree
     xyz = [2.5, 9, 0];
     moved_obj1_mat_h = moveByRPYXYZ(object1_mat_h, rpy, xyz);
     object_list(1).object_vertices = convertXYZmatrixToXYZstruct(moved_obj1_mat_h);
 
+    rpy = [0 0 25]; % in degree
+    xyz = [12.5, 9, 0];
+    moved_obj2_mat_h = moveByRPYXYZ(object1_mat_h, rpy, xyz);
+    object_list(2).object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
+    
+    rpy = [0 0 45]; % in degree
+    xyz = [6, -5, 0];
+    moved_obj3_mat_h = moveByRPYXYZ(object1_mat_h, rpy, xyz);
+    object_list(3).object_vertices = convertXYZmatrixToXYZstruct(moved_obj3_mat_h);
+    
+    rpy = [0 0 35]; % in degree
+    xyz = [-10, 9, 0];
+    moved_obj4_mat_h = moveByRPYXYZ(object1_mat_h, rpy, xyz);
+    object_list(4).object_vertices = convertXYZmatrixToXYZstruct(moved_obj4_mat_h);
+    
+    
     % Move Object2
     object2_mat = convertXYZstructToXYZmatrix(objects2);
     object2_mat_h = converToHomogeneousCoord(object2_mat);
 
-    rpy = [5 8 15]; % in degree
+    rpy = [0 0 15]; % in degree
     xyz = [15, 10, 0.1];
-    moved_obj2_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    object_list(2).object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
+    moved_obj5_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
+    object_list(5).object_vertices = convertXYZmatrixToXYZstruct(moved_obj5_mat_h);
 
-    rpy = [5 10 -25]; % in degree
+    rpy = [0 0 -25]; % in degree
     xyz = [7, -3, 0.2];
-    moved_obj3_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
-    object_list(3).object_vertices = convertXYZmatrixToXYZstruct(moved_obj3_mat_h);
+    moved_obj6_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
+    object_list(6).object_vertices = convertXYZmatrixToXYZstruct(moved_obj6_mat_h);
 
+    rpy = [0 0 5]; % in degree
+    xyz = [15, -10, 0.1];
+    moved_obj7_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
+    object_list(7).object_vertices = convertXYZmatrixToXYZstruct(moved_obj7_mat_h);
+
+    rpy = [0 0 -35]; % in degree
+    xyz = [7, -3, 0.2];
+    moved_obj8_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
+    object_list(8).object_vertices = convertXYZmatrixToXYZstruct(moved_obj8_mat_h);
+    
     % Move Object3
     object3_mat = convertXYZstructToXYZmatrix(objects3);
     object3_mat_h = converToHomogeneousCoord(object3_mat);
     rpy = [5 5 0]; % in degree
     xyz = [10, 0, 0];
-    moved_obj4_mat_h = moveByRPYXYZ(object3_mat_h, rpy, xyz);
-    object_list(4).object_vertices = convertXYZmatrixToXYZstruct(moved_obj4_mat_h);
+    moved_obj9_mat_h = moveByRPYXYZ(object3_mat_h, rpy, xyz);
+    object_list(9).object_vertices = convertXYZmatrixToXYZstruct(moved_obj9_mat_h);
+    
+    rpy = [0 0 0]; % in degree
+    xyz = [-10, 4, 0];
+    moved_obj10_mat_h = moveByRPYXYZ(object3_mat_h, rpy, xyz);
+    object_list(10).object_vertices = convertXYZmatrixToXYZstruct(moved_obj10_mat_h);
+    
+    rpy = [0 0 0]; % in degree
+    xyz = [10, 5, 0];
+    moved_obj11_mat_h = moveByRPYXYZ(object3_mat_h, rpy, xyz);
+    object_list(11).object_vertices = convertXYZmatrixToXYZstruct(moved_obj11_mat_h);
+    
+    rpy = [0 0 0]; % in degree
+    xyz = [-10, -8, 0];
+    moved_obj12_mat_h = moveByRPYXYZ(object3_mat_h, rpy, xyz);
+    object_list(12).object_vertices = convertXYZmatrixToXYZstruct(moved_obj12_mat_h);
 end
