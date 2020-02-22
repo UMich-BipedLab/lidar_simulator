@@ -19,7 +19,7 @@ function [object_list, LiDAR_ring_points] = simulateCalibratedLiDAR(object_list,
     if(opt_method == "Lie")
         for object = 1:num_obj
             object_list(object).calibrated_points_mat = [];
-            for ring_num = 1:num_beam
+            for ring_num = 1:num_beam -1 % TODO: need a robust solution to deal with 0 or 1 indexing issue here
                 original_points = [object_list(object).ring_points(ring_num).x;
                                    object_list(object).ring_points(ring_num).y;
                                    object_list(object).ring_points(ring_num).z;
@@ -43,7 +43,7 @@ function [object_list, LiDAR_ring_points] = simulateCalibratedLiDAR(object_list,
     elseif (opt_method == "Spherical")
         for object = 1:num_obj
             object_list(object).calibrated_points_mat = [];
-            for ring_num = 1:num_beam
+            for ring_num = 1:num_beam-1
                 original_points = [object_list(object).ring_points(ring_num).x;
                                    object_list(object).ring_points(ring_num).y;
                                    object_list(object).ring_points(ring_num).z;

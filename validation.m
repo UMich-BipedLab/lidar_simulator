@@ -2,8 +2,8 @@
 %General parameters
 clc
 
-t_scene = 13; %training scene
-v_scene = 13; %validation scene
+t_scene = 14; %training scene
+v_scene = 14; %validation scene
 
 opt_formulation = ["Lie","Spherical"];
 opt_method = opt_formulation(2);
@@ -11,6 +11,10 @@ opt_method = opt_formulation(2);
 show_statistics = 1;
 addpath('..\extrinsic_lidar_camera_calibration\')
 opts.load_path = ".\results_me\scene" + num2str(t_scene)+"\";
+opts.save_path = ".\results_me\Validation14\scene" + num2str(t_scene)+"\";
+if ~exist(opts.save_path, 'dir')
+   mkdir(opts.save_path)
+end
 % addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 % opts.load_path = "./results/";
 
@@ -92,9 +96,9 @@ viewCurrentPlot(fig_handles(3), "LiDAR simulation (Scene " + num2str(v_scene) + 
 set(fig_handles(3), 'visible', 'off')
 set(fig_handles(3), 'Color', 'b')
 
-saveas(fig_handles(2),strcat(opts.load_path,'ValidateScene', num2str(1),'.fig'));
-saveas(fig_handles(3),strcat(opts.load_path,'ValidateScene', num2str(2),'.fig'));
-saveas(fig_handles(4),strcat(opts.load_path,'ValidateScene', num2str(3),'.fig'));
+saveas(fig_handles(2),strcat(opts.save_path,'ValidateScene', num2str(1),'.fig'));
+saveas(fig_handles(3),strcat(opts.save_path,'ValidateScene', num2str(2),'.fig'));
+saveas(fig_handles(4),strcat(opts.save_path,'ValidateScene', num2str(3),'.fig'));
 % Plotting points on polygons
 % cla(fig_handle(4))
 disp("- Drawing points on obstacles...")
@@ -145,7 +149,7 @@ viewCurrentPlot(fig_handles(4), "Rings on Objects (Scene " + num2str(v_scene) + 
 view_angle = [90, 0];
 for object = 1:length(object_list)
     viewCurrentPlot(fig_handles(4+object), "Object 1 (Scene " + num2str(v_scene) + ")", view_angle)
-    saveas(fig_handles(4+object),strcat(opts.load_path,'validateobj', num2str(object),'.fig'));
+    saveas(fig_handles(4+object),strcat(opts.save_path,'validateobj', num2str(object),'.fig'));
 end
 
 if show_statistics
@@ -209,4 +213,4 @@ results = struct('ring', {distance_original(1).ring(:).ring}, ...
 struct2table(distance_calibrated(1).ring(:))
 disp("Showing comparison")
 struct2table(results)
-save(opts.load_path + "data.mat", 'results');
+save(opts.save_path + "data.mat", 'results');
