@@ -1,7 +1,8 @@
 function [object_list, color_list] = getScene10()    
     %% Description: 
-    %To show the scaling constraint  
-    %4 medium targets list on the 4 sides of the lidar, paralell to z axis
+    %4 medium targets list on the 4 sides of the lidar, surrounding the
+    %lidar beams. paralell to z axis. Constrain the scaling, translation in
+    %x y plane. 
     
     
 

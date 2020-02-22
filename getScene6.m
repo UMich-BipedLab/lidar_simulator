@@ -31,10 +31,8 @@
 
 function [object_list, color_list] = getScene6()    
     %% Description: 
-    % 1 big, 2 medium, 1 small 
-    % Spread with different angled in front of the lidar
-    % More extreme
-    
+    %12 targets in the scene, in different positions and orentations except
+    %for no constrained of the elevation angle.(no upper and lower bowl)
     
 
     %% Create object list

@@ -1,7 +1,8 @@
 function [object_list, color_list] = getScene7()    
     %% Description: 
-    % 8 big, 8 medium, 8 small (square)
-    % spread with different angles around the lidar
+    % 8 big, 8 medium, 8 small (square) well distributed in different positions and orentations 
+    %slightly constrained in the elevation angle.(slightly tilted lower and
+    %upper bowel). Rings less tend to be misordered.
     
 
     %% Create object list

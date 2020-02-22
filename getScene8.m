@@ -1,7 +1,8 @@
 function [object_list, color_list] = getScene8()    
     %% Description: 
-    %To show the scaling constraint  
-    %4 medium targets list in a line, on the same side of the lidar
+    %3 medium targets list in a line, on the same side of the lidar
+    %Bascially only constraints of scaling in this configuration.
+    %Translation and rotation are not constrained.
     
     
 

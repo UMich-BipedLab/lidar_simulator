@@ -1,8 +1,7 @@
 function [object_list, color_list] = getScene12()    
     %% Description: 
-    %To show the scaling constraint  
-    %4 medium targets list on the 1 side of the lidar, rotated around z
-    %axis
+    %4 medium targets list on the one side of the lidar in the x axis,
+    %rotated in y axis, to constrain the pitch angle.
     
     
 

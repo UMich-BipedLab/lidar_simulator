@@ -1,6 +1,6 @@
 function [object_list, color_list] = getScene14()    
     %% Description: 
-    % 8 big, 8 medium, 8 small (square)
+    % 8 big, 8 medium, 8 small (square), validation scene
     % spread with different angles around the lidar
     
 
