@@ -139,6 +139,12 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         LiDAR_points(ring_num).points.I = [];
         LiDAR_points(ring_num).points.R = [];
         LiDAR_points(ring_num).noise_model = genLiDARNoiseModel(ring_num, LiDAR_opts);
+        LiDAR_points(ring_num).target_pose.xp = 0;
+        LiDAR_points(ring_num).target_pose.xn = 0;
+        LiDAR_points(ring_num).target_pose.yp = 0;
+        LiDAR_points(ring_num).target_pose.yn = 0;
+        LiDAR_points(ring_num).target_pose.zp = 0;
+        LiDAR_points(ring_num).target_pose.zn = 0;
     end
     rng(1);
     noise_table = -0.1 + 0.2.*rand(3,num_beam);
@@ -228,6 +234,31 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                                                 rand_z + model_noisy_z;
                                                 0; 0];  % intensity and ring number
                         closest_point(ring_num).objects(object).point = noisy_point_on_plane;
+                        
+                        %assign the target pose to this ring
+                        if objects(object).centroid(1)> 0.1
+                            LiDAR_points(ring_num).target_pose.xp = 1;
+                        elseif objects(object).centroid(1)< -0.1
+                            LiDAR_points(ring_num).target_pose.xn = 1;
+                        end
+                        if objects(object).centroid(2)> 0.1
+                            LiDAR_points(ring_num).target_pose.yp = 1;
+                        elseif objects(object).centroid(2)< -0.1
+                            LiDAR_points(ring_num).target_pose.yn = 1;
+                        end
+                        if objects(object).centroid'*objects(object).normal > 0
+                            if objects(object).normal(3)> 0.1
+                                LiDAR_points(ring_num).target_pose.zp = 1;
+                            elseif objects(object).normal(3)< -0.1
+                                LiDAR_points(ring_num).target_pose.zn = 1;
+                            end
+                        else 
+                            if objects(object).normal(3)> 0.1
+                                LiDAR_points(ring_num).target_pose.zn = 1;
+                            elseif objects(object).normal(3)< -0.1
+                                LiDAR_points(ring_num).target_pose.zp = 1;
+                            end
+                        end
                     end
 %                     in_polygon = inhull(I, objects(object));
                 end
