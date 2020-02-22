@@ -31,17 +31,17 @@
 
 %% General parameters
 clear, clc
-scene = 14; % Scene number
+scene = 7; % Scene number
 show_statistics = 1;
 addpath('..\extrinsic_lidar_camera_calibration\')
-opts.save_path = ".\results_me\scene" + num2str(scene)+"\";
+opts.save_path = ".\results\scene" + num2str(scene)+"\";
 % addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 % opts.save_path = "./results/";
 if ~exist(opts.save_path, 'dir')
    mkdir(opts.save_path)
 end
 % Intrinsic calibration 
-opts.method = 2; % Lie; Spherical
+opts.method = 1; % Lie; Spherical
 opts.iterative = 0;
 opts.show_results = 0;
 
