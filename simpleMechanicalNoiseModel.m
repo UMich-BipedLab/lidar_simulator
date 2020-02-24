@@ -2,6 +2,7 @@ function noise_model = simpleMechanicalNoiseModel(ring_num, LiDAR_opts)
     
     % Ring number
     noise_model.ring = ring_num;
+    noise_model.type = 'additive';
     
     % Range noise (+- 0.5 cm)
     range_max =  0.005;
