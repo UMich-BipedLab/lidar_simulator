@@ -31,17 +31,17 @@
 
 %% General parameters
 clear, clc
-scene = 7; % Scene number
+scene = 14; % Scene number
 show_statistics = 1;
 addpath('..\extrinsic_lidar_camera_calibration\')
-opts.save_path = ".\results\scene" + num2str(scene)+"\";
+opts.save_path = ".\results_me\scene" + num2str(scene)+"\";
 % addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 % opts.save_path = "./results/";
 if ~exist(opts.save_path, 'dir')
    mkdir(opts.save_path)
 end
 % Intrinsic calibration 
-opts.method = 1; % Lie; Spherical
+opts.method = 2; % Lie; Spherical
 opts.iterative = 0;
 opts.show_results = 0;
 
@@ -197,7 +197,7 @@ saveas(fig_handles(3),strcat(opts.save_path,'LiDARSimulation', num2str(scene),'.
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.fig'));
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.pdf'));
 %% Intrinsic Calibration
-opt_formulation = ["Lie","Spherical"]; % Lie or Spherical
+opt_formulation = ["Lie","BaseLine1", "BaseLine2"]; % Lie or Spherical
 opts.num_scans = 1;
 opts.num_iters = 5;
 opts.num_beams = LiDAR_opts.properties.beam;
@@ -232,7 +232,7 @@ if (opt_formulation(opts.method) == "Lie")
         distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
     end
 
-elseif (opt_formulation(opts.method) == "Spherical")
+elseif (opt_formulation(opts.method) == "BaseLine1")
     % preprocess the data
     spherical_data = cell(1,num_targets);
     data_split_with_ring = cell(1, num_targets);
@@ -263,7 +263,7 @@ elseif (opt_formulation(opts.method) == "Spherical")
         
         % update the corrected points
         data_split_with_ring = updateDatacFromMechanicalModel(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets);
-        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, opt_formulation(opts.method));
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets, opt_formulation(opts.method));
         distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
     end
 end

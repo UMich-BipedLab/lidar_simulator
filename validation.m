@@ -2,13 +2,13 @@
 %General parameters
 clc
 
-t_scene = 13; %training scene
-v_scene = 14; %validation scene
+t_scene = 8; %training scene
+v_scene = 13; %validation scene
 
-opt_formulation = ["Lie","Spherical"];
+opt_formulation = ["Lie","BaseLine1","BaseLine2"];
 opt_method = opt_formulation(2);
 
-show_statistics = 1;
+show_statistics = 0;
 addpath('..\extrinsic_lidar_camera_calibration\')
 opts.load_path = ".\results_me\scene" + num2str(t_scene)+"\";
 opts.save_path = ".\results_me\Validation13\scene" + num2str(t_scene)+"\";

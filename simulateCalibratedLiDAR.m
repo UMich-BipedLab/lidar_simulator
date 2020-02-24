@@ -40,7 +40,7 @@ function [object_list, LiDAR_ring_points] = simulateCalibratedLiDAR(object_list,
                 end
             end
         end
-    elseif (opt_method == "Spherical")
+    elseif (opt_method == "BaseLine1")
         for object = 1:num_obj
             object_list(object).calibrated_points_mat = [];
             for ring_num = 1:num_beam-1
