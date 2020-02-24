@@ -31,17 +31,17 @@
 
 %% General parameters
 clear, clc
-scene = 14; % Scene number
+scene = 9; % Scene number
 show_statistics = 1;
 addpath('..\extrinsic_lidar_camera_calibration\')
-opts.save_path = ".\results_me\scene" + num2str(scene)+"\";
+opts.save_path = ".\results_BL2\scene" + num2str(scene)+"\";
 % addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
 % opts.save_path = "./results/";
 if ~exist(opts.save_path, 'dir')
    mkdir(opts.save_path)
 end
 % Intrinsic calibration 
-opts.method = 2; % Lie; Spherical
+opts.method = 3; % Lie; BaseLine2; BaseLine2
 opts.iterative = 0;
 opts.show_results = 0;
 
@@ -197,7 +197,7 @@ saveas(fig_handles(3),strcat(opts.save_path,'LiDARSimulation', num2str(scene),'.
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.fig'));
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.pdf'));
 %% Intrinsic Calibration
-opt_formulation = ["Lie","BaseLine1", "BaseLine2"]; % Lie or Spherical
+opt_formulation = ["Lie", "BaseLine1", "BaseLine2"]; % Lie or Spherical
 opts.num_scans = 1;
 opts.num_iters = 5;
 opts.num_beams = LiDAR_opts.properties.beam;
@@ -266,7 +266,41 @@ elseif (opt_formulation(opts.method) == "BaseLine1")
         data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets, opt_formulation(opts.method));
         distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
     end
-end
+    
+elseif (opt_formulation(opts.method) == "BaseLine2")
+    spherical_data = cell(1,num_targets);
+    data_split_with_ring = cell(1, num_targets);
+    data_split_with_ring_cartesian = cell(1, num_targets);
+
+    disp("Parsing data...")
+    for t = 1:num_targets
+        spherical_data{t} = Cartesian2Spherical(object_list(t).points_mat);
+        data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams);
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams);
+    end
+    data_split_with_ring_cartesian_original = data_split_with_ring_cartesian;
+    disp("Optimizing using a BaseLine2 model...")
+    if ~opts.iterative
+       opts.num_iters = 1;
+    end
+    distance = []; % if re-run, it will show error of "Subscripted assignment between dissimilar structures"
+    distance(opts.num_iters).ring(opts.num_beams) = struct(); 
+    distance(opts.num_iters).mean = 0;
+     % iteratively optimize the intrinsic parameters
+    for k = 1: opts.num_iters
+        fprintf("--- Working on %i/%i\n", k, opts.num_iters)
+        [delta, plane, valid_rings_and_targets] = estimateIntrinsicFromBL2(opts.num_beams, num_targets, opts.num_scans, data_split_with_ring, data_split_with_ring_cartesian);
+        if k == 1
+            distance_original = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
+        end
+        
+        % update the corrected points
+        data_split_with_ring_cartesian = updateDataRaw(opts.num_beams, num_targets, data_split_with_ring, delta, valid_rings_and_targets, opt_formulation(opts.method));
+        data_split_with_ring = DataFromCartesian2Spherical(opts.num_beams, num_targets, data_split_with_ring_cartesian);
+        distance(k) = point2PlaneDistance(data_split_with_ring_cartesian, plane, opts.num_beams, num_targets); 
+    end
+end   
+ 
 disp('Done optimization')
 
 if ~exist(opts.save_path,'dir') 
