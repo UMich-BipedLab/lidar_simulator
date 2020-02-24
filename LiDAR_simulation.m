@@ -33,10 +33,10 @@
 clear, clc
 scene = 9; % Scene number
 show_statistics = 1;
-addpath('..\extrinsic_lidar_camera_calibration\')
-opts.save_path = ".\results_BL2\scene" + num2str(scene)+"\";
-% addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
-% opts.save_path = "./results/";
+% addpath('..\extrinsic_lidar_camera_calibration\')
+% opts.save_path = ".\results_BL2\scene" + num2str(scene)+"\";
+addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
+opts.save_path = "./results/";
 if ~exist(opts.save_path, 'dir')
    mkdir(opts.save_path)
 end
@@ -77,7 +77,14 @@ viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(scene) + ")")
 
 %% LiDAR properties
 disp("- Loading LiDAR properties...")
-LiDAR_opts.properties.mechanics_noise_model = 0; % 1: simpleMechanicalNoiseModel
+%%% mechanics_noise_model
+% 0: no noise model 
+% 1: whiteNoise
+% 2: simpleMechanicalNoiseModel
+% 3: SE(3)
+LiDAR_opts.properties.mechanics_noise_model = 2; 
+
+
 LiDAR_opts.properties.sensor_noise_enable = 0;
 LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
 LiDAR_opts.properties.range = 50;
@@ -196,6 +203,7 @@ saveas(fig_handles(3),strcat(opts.save_path,'LiDARSimulation', num2str(scene),'.
 saveas(fig_handles(3),strcat(opts.save_path,'LiDARSimulation', num2str(scene),'.pdf'));
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.fig'));
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.pdf'));
+
 %% Intrinsic Calibration
 opt_formulation = ["Lie", "BaseLine1", "BaseLine2"]; % Lie or Spherical
 opts.num_scans = 1;
