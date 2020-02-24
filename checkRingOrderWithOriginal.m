@@ -29,8 +29,8 @@ function [ring_ordered, ring_misorder_list] = checkRingOrderWithOriginal(data_sp
         end
         
         ring_order_original(ring).ring = ring;
-        if ~isempty(ring_points)
-            ring_order_original(ring).ring_mean = mean(ring_points(1:3, :), 2)';
+        if ~isempty(ring_points_org)
+            ring_order_original(ring).ring_mean = mean(ring_points_org(1:3, :), 2)';
             ring_order_original(ring).z_axis = ring_order_original(ring).ring_mean(3);
         else
             ring_order_original(ring).ring_mean = [0 0 0];
