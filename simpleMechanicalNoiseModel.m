@@ -58,7 +58,7 @@ function noise_model = simpleMechanicalNoiseModel(ring_num, LiDAR_opts)
         el_noise = max(min(el_noise, upper_bound), lower_bound);
     end
     noise_model.el_noise = el_noise;
-    [noise_model.x, noise_model.y, noise_model.z] = sph2cart(noise_model.az_noise, noise_model.el_noise, noise_model.range_noise);
+    [noise_model.x, noise_model.y, noise_model.z] = sph2cart(deg2rad(noise_model.az_noise), deg2rad(noise_model.el_noise), noise_model.range_noise);
 %     if ring_num == str2num(LiDAR_opts.properties.ordered_ring_elevation.ring)
 %         % Lowest beam
 %         elevation1 = LiDAR_opts.properties.ordered_ring_elevation(1).angle;
