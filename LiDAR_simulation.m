@@ -31,8 +31,8 @@
 
 %% General parameters
 clear, clc
-scene = 9; % Scene number
-show_statistics = 1;
+scene = 8; % Scene number
+show_statistics = 0;
 addpath('..\extrinsic_lidar_camera_calibration\')
 opts.save_path = ".\results_BL2\scene" + num2str(scene)+"\";
 % addpath('/home/brucebot/workspace/griztag/src/matlab/matlab/slider/intrinsic_latest')
@@ -42,6 +42,7 @@ if ~exist(opts.save_path, 'dir')
 end
 % Intrinsic calibration 
 opts.method = 3; % Lie; BaseLine2; BaseLine2
+opts.datatype = "Simulation"; %Experiment , Simulation
 opts.iterative = 0;
 opts.show_results = 0;
 
@@ -208,7 +209,7 @@ if (opt_formulation(opts.method) == "Lie")
     
     disp("Parsing data...")
     for t = 1:num_targets
-        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams);
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams, opts.datatype);
     end 
     data_split_with_ring_cartesian_original = data_split_with_ring_cartesian;
     
@@ -241,8 +242,8 @@ elseif (opt_formulation(opts.method) == "BaseLine1")
     disp("Parsing data...")
     for t = 1:num_targets
         spherical_data{t} = Cartesian2Spherical(object_list(t).points_mat);
-        data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams);
-        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams);
+        data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams, opts.datatype);
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams, opts.datatype);
     end
     data_split_with_ring_cartesian_original = data_split_with_ring_cartesian;
     disp("Optimizing using a mechanical model...")
@@ -275,8 +276,8 @@ elseif (opt_formulation(opts.method) == "BaseLine2")
     disp("Parsing data...")
     for t = 1:num_targets
         spherical_data{t} = Cartesian2Spherical(object_list(t).points_mat);
-        data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams);
-        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams);
+        data_split_with_ring{t} = splitPointsBasedOnRing(spherical_data{t}, opts.num_beams, opts.datatype);
+        data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, opts.num_beams,opts.datatype);
     end
     data_split_with_ring_cartesian_original = data_split_with_ring_cartesian;
     disp("Optimizing using a BaseLine2 model...")
@@ -315,8 +316,8 @@ results = struct('ring', {distance(end).ring(:).ring}, ...
                  'num_points', {distance(end).ring(:).num_points}, ...
                  'mean_original', {distance_original.ring(:).mean}, ...
                  'mean_calibrated', {distance(end).ring(:).mean}, ...
-                 'mean_diff', num2cell([distance_original.ring(:).mean] - [distance(end).ring(:).mean]), ...
                  'mean_percentage', num2cell((abs([distance_original.ring(:).mean]) - abs([distance(end).ring(:).mean])) ./ abs([distance_original.ring(:).mean])), ...
+                 'target_pose', {LiDAR_ring_points(:).target_pose},...
                  'mean_diff_in_mm', num2cell(([distance_original.ring(:).mean] - [distance(end).ring(:).mean]) * 1e3), ...
                  'std_original', {distance_original.ring(:).std}, ...
                  'std_calibrated', {distance(end).ring(:).std}, ...
