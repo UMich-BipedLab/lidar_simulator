@@ -28,33 +28,58 @@
  * AUTHOR: Bruce JK Huang (bjhuang[at]umich.edu)
  * WEBSITE: https://www.brucerobot.com/
 %}
+% clc, clear
+% test2D_nonhomo = rand(2,5);
+% test2D_homo = [test2D_nonhomo; ones(1,5)];
+% test3D_nonhomo = rand(3, 5);
+% test3D_homo = [test3D_nonhomo; ones(1,5)];
+% test_random = rand(4, 5);
+% [flag, points] = t_checkHomogeneousCoord(test2D_nonhomo)
+% [flag, points] = t_checkHomogeneousCoord(test2D_homo)
+% [flag, points] = t_checkHomogeneousCoord(test3D_nonhomo)
+% [flag, points] = t_checkHomogeneousCoord(test3D_homo)
+% [flag, points] = t_checkHomogeneousCoord(test_random)
 
-
-function flag = checkHomogeneousCoord(points)
-    % assume corners is either 2xn, 3xn or 4xn
+% num_points = 6;
+% test2D_nonhomo = rand(2, num_points);
+% test2D_homo = [test2D_nonhomo; ones(1,num_points)];
+% test3D_nonhomo = rand(3, num_points);
+% test3D_homo = [test3D_nonhomo; ones(1,num_points)];
+% test_random = rand(4, num_points);
+% [flag, points] = t_checkHomogeneousCoord(test2D_nonhomo)
+% [flag, points] = t_checkHomogeneousCoord(test2D_homo)
+% [flag, points] = t_checkHomogeneousCoord(test3D_nonhomo)
+% [flag, points] = t_checkHomogeneousCoord(test3D_homo)
+% [flag, points] = t_checkHomogeneousCoord(test_random)
+function [flag, points] = checkHomogeneousCoord(points)
+    % Assuming points is either 2xn, 3xn or 4xn
     % check 2D or 3D
-    [n, m] = size(points);
-
-    flag = 0;
+    flag = 1;
+    [m, m_prim3] = size(points);
+    if min(m, m_prim3) > 3
+        points = makeWideMatrix(points);
+    end
+    [n, ~] = size(points);
     if n < 2 || n > 4
-        error("wrong usage, the input should be 2xn, 3xn or 4xn! \n --- Currently is: %i, %i", n, m)
-    elseif n == 2
-        % not homogeneous coord.
+        error("Wrong usage: input rows are smaller than 2 or bigger than 4 (currently is %i)", n)
+    elseif n == 2 % 2D non-homo
         flag = 0;
-    elseif n == 3 
-        if ~all((points(3, :) == 1)) 
-            % 3D but not in homogeneous
-            flag = 0; 
-        else
-            % 2D in homogeneous
+        points = [points; 
+                   ones(1, size(points, 2))];
+    elseif n == 3
+        if ~isempty(points(3, points(3, :)==1)) % 2D homogeneous
             flag = 1;
+            
+            return;
+        else % 3D none-homo
+            flag = 0;
+            points = [points; 
+                       ones(1, size(points, 2))];
         end
     elseif n==4
-        if ~all((points(4, :) == 1))
-            warning("The forth row is not 1; is it not a homogeneous coord.")
-        else
-            % 3D in homogeneous
-             flag = 1;
+        if isempty(points(4, points(4, :)==1)) % 3D but not in homogeneous
+            error("wrong usage: mean of the last rows is not one but %f", mean(points(4,:), 2))
         end
+        flag = 1;
     end
 end
