@@ -139,6 +139,11 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         LiDAR_points(ring_num).points.I = [];
         LiDAR_points(ring_num).points.R = [];
         LiDAR_points(ring_num).noise_model = genLiDARNoiseModel(ring_num, LiDAR_opts);
+        
+        LiDAR_points(ring_num).sensor_noise.rand_x = 0;
+        LiDAR_points(ring_num).sensor_noise.rand_y = 0;
+        LiDAR_points(ring_num).sensor_noise.rand_z = 0;
+        
         LiDAR_points(ring_num).target_pose.xp = 0;
         LiDAR_points(ring_num).target_pose.xn = 0;
         LiDAR_points(ring_num).target_pose.yp = 0;
@@ -146,8 +151,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         LiDAR_points(ring_num).target_pose.zp = 0;
         LiDAR_points(ring_num).target_pose.zn = 0;
     end
-    rng(1);
-    noise_table = -0.1 + 0.2.*rand(3,num_beam);
+    
 %     for ring_num = 1:num_beam
     parfor ring_num = 1:num_beam
         LiDAR_opts_tmp =  LiDAR_opts; % make parfor more efficient
@@ -156,13 +160,8 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
 %         noise_az = LiDAR_points(ring_num).noise_model.az_noise;
 %         noise_el = LiDAR_points(ring_num).noise_model.el_noise;
 %         [model_noisy_x, model_noisy_y, model_noisy_z] = sph2cart(noise_az, noise_el, noise_range);
-%         model_noisy_x = LiDAR_points(ring_num).noise_model.x;
-%         model_noisy_y = LiDAR_points(ring_num).noise_model.y;
-%         model_noisy_z = LiDAR_points(ring_num).noise_model.z;
-           
-        model_noisy_x = noise_table(1,ring_num);
-        model_noisy_y = noise_table(2,ring_num);
-        model_noisy_z = noise_table(3,ring_num);
+
+         
         % Elevatoin angle for this ring
         elevation = deg2rad(LiDAR_opts_tmp.properties.ring_elevation(ring_num).angle);
         points = zeros(5, num_points); % X Y Z I R
@@ -188,9 +187,9 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             
             %% Apply sensor noise (random noise)
             % Fixed noise for this point
-            rand_z = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(3), 1); % ring
-            rand_y = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(2), 1); % noise on ring
-            rand_x = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(1), 1); % noise on depth
+            LiDAR_points(ring_num).sensor_noise.rand_z = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(3), 1); % ring
+            LiDAR_points(ring_num).sensor_noise.rand_y = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(2), 1); % noise on ring
+            LiDAR_points(ring_num).sensor_noise.rand_x = getNoise(0, LiDAR_opts_tmp.properties.noise_sigma(1), 1); % noise on depth
             
             %% check with all objects
             flag_on_an_object = 0;
@@ -228,11 +227,14 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
                         
                         
                         % add noise
-                        noisy_point_on_plane = point_on_plane + ...
-                                               [rand_x + model_noisy_x; ...
-                                                rand_y + model_noisy_y; ...
-                                                rand_z + model_noisy_z;
-                                                0; 0];  % intensity and ring number
+                        noisy_point_on_plane = addTwoTypesOfNoise(point_on_plane, ...
+                                                                  LiDAR_points(ring_num).sensor_noise, ...
+                                                                  LiDAR_points(ring_num).noise_model);
+%                         noisy_point_on_plane = point_on_plane + ...
+%                                                [rand_x + model_noisy_x; ...
+%                                                 rand_y + model_noisy_y; ...
+%                                                 rand_z + model_noisy_z;
+%                                                 0; 0];  % intensity and ring number
                         closest_point(ring_num).objects(object).point = noisy_point_on_plane;
                         
                         %assign the target pose to this ring
@@ -331,10 +333,11 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
             else
 %                 point = limitInBoundaryWithMaxMin(point, boundary); % check boundary
 %                 point = limitInBoundaryWithBoundaryPlanes(point, LiDAR_centroid, boundary);
-                noisy_point = [point(1) + rand_x + model_noisy_x;...
-                               point(2) + rand_y + model_noisy_y;...
-                               point(3) + rand_z + model_noisy_z;...
-                               255; ring_num];
+                point = [point; 255; ring_num];
+                noisy_point = addTwoTypesOfNoise(point, ...
+                                                 LiDAR_points(ring_num).sensor_noise, ...
+                                                 LiDAR_points(ring_num).noise_model);
+
                 points(:, i) = noisy_point;
             end
 %             scatter3(point(1), point(2), point(3), '.')
