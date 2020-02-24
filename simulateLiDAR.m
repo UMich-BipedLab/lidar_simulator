@@ -118,6 +118,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
 
     % Initialization for points of a ring on objects
     parfor ring_num = 1:num_beam
+%     for ring_num = 1:num_beam
         for obj = 1:num_obj
             LiDAR_points(ring_num).objects(obj).points.x = [];
             LiDAR_points(ring_num).objects(obj).points.y = [];
@@ -167,7 +168,7 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
         points = zeros(5, num_points); % X Y Z I R
         
         for i = 1 : num_points
-            azimuth = (i-1) * resolution;
+            azimuth = (i-1) * resolution; % in rad
 %             fprintf("ring_num: %i; point_num: %i\n", ring_num, i)
             [x, y, z] = sph2cart(azimuth, elevation, range);
             point = [x; y; z];
