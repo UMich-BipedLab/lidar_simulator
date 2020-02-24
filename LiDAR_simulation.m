@@ -31,7 +31,7 @@
 
 %% General parameters
 clear, clc
-scene = 9; % Scene number
+scene = 14; % Scene number
 show_statistics = 1;
 % addpath('..\extrinsic_lidar_camera_calibration\')
 % opts.save_path = ".\results_BL2\scene" + num2str(scene)+"\";
@@ -41,7 +41,7 @@ if ~exist(opts.save_path, 'dir')
    mkdir(opts.save_path)
 end
 % Intrinsic calibration 
-opts.method = 3; % Lie; BaseLine2; BaseLine2
+opts.method = 1; % Lie; BaseLine2; BaseLine2
 opts.iterative = 0;
 opts.show_results = 0;
 
@@ -80,9 +80,12 @@ disp("- Loading LiDAR properties...")
 %%% mechanics_noise_model
 % 0: no noise model 
 % 1: whiteNoise
-% 2: simpleMechanicalNoiseModel
-% 3: SE(3)
-LiDAR_opts.properties.mechanics_noise_model = 2; 
+% 2: simpleMechanicalNoiseModel (3 params)
+% 3: [NOT YET] complexMechanicalNoiseModel (6 params)
+% 4: simpleHomogeneousNoiseModel (use simpleMechanicalNoiseModel then convert to SE3)
+% 5: [NOT YET] complexHomogeneousNoiseModel (use complexMechanicalNoiseModel then convert to SE3)
+% 6: simpleHomogeneousNoiseModelAddOnNoise (use simpleMechanicalNoiseModel then convert to SE3 and add on more noise)
+LiDAR_opts.properties.mechanics_noise_model = 6; 
 
 
 LiDAR_opts.properties.sensor_noise_enable = 0;
