@@ -2,16 +2,17 @@
 %General parameters
 clc
 
-t_scene = 8; %training scene
+t_scene = 14; %training scene
 v_scene = 13; %validation scene
 
 opt_formulation = ["Lie","BaseLine1","BaseLine2"];
-opt_method = opt_formulation(2);
+opt_method = opt_formulation(3);
+opts.datatype = "Simulation";
 
 show_statistics = 0;
 addpath('..\extrinsic_lidar_camera_calibration\')
-opts.load_path = ".\results_me\scene" + num2str(t_scene)+"\";
-opts.save_path = ".\results_me\Validation13\scene" + num2str(t_scene)+"\";
+opts.load_path = ".\results_BL2\scene" + num2str(t_scene)+"\";
+opts.save_path = ".\results_BL2\Validation13\scene" + num2str(t_scene)+"\";
 if ~exist(opts.save_path, 'dir')
    mkdir(opts.save_path)
 end
@@ -191,8 +192,8 @@ calibrated_data_split_with_ring_cartesian = cell(1,num_targets);
 plane = cell(1,num_targets);
 
 for t = 1:length(object_list)
-    data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, LiDAR_opts.properties.beam);
-    calibrated_data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list_calibrated(t).calibrated_points_mat, LiDAR_opts.properties.beam);
+    data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list(t).points_mat, LiDAR_opts.properties.beam, opts.datatype);
+    calibrated_data_split_with_ring_cartesian{t} = splitPointsBasedOnRing(object_list_calibrated(t).calibrated_points_mat, LiDAR_opts.properties.beam, opts.datatype);
     plane{t}.centroid =  [object_list(t).centroid; 1];
     plane{t}.normals =  object_list(t).normal;
     plane{t}.unit_normals = object_list(t).normal/(norm(object_list(t).normal));
