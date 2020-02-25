@@ -29,11 +29,17 @@
  * WEBSITE: https://www.brucerobot.com/
 %}
 
-function plotOriginalAxis(fig_handle, length, properteis)
+function plotOriginalAxis(fig_handle, pose_H, length, properteis)
     if ~exist('properteis', 'var')
         properteis = '-b';
     end
-    quiver3(fig_handle, zeros(3,1), zeros(3,1), zeros(3,1), ...
-            [length; 0; 0],[0; length; 0],[0; 0; length], ...
-            properteis, 'fill', 'LineWidth', 5)
+    origin = pose_H(:, 4);
+    x_arrow = pose_H * ([length; 0; 0; 0]);
+    y_arrow = pose_H * ([0; length; 0; 0]);
+    z_arrow = pose_H * ([0; 0; length; 0]);
+    
+    quiver3(fig_handle, ...
+            repelem(origin(1), 3)', repelem(origin(2), 3)', repelem(origin(3), 3)', ...
+            x_arrow(1:3), y_arrow(1:3), z_arrow(1:3), ...
+            properteis, 'fill', 'LineWidth', 3)
 end
