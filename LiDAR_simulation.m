@@ -78,7 +78,7 @@ boundary.vertices = createBoxVertices(boundary);
 boundary.faces = createBoxFaces(boundary.vertices);
 scatter3(fig_handles(2), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
 
-plotOriginalAxis(fig_handles(2), 1)
+plotOriginalAxis(fig_handles(2), eye(4),1)
 viewCurrentPlot(fig_handles(2), "3D environment (Scene " + num2str(scene) + ")")
 
 
@@ -88,21 +88,21 @@ disp("- Loading LiDAR properties...")
 % 0: no noise model 
 % 1: whiteNoise
 % 2: simpleMechanicalNoiseModel (3 params)
-% 3: [NOT YET] complexMechanicalNoiseModel (6 params)
+% 3: complexMechanicalNoiseModel (6 params)
 % 4: simpleHomogeneousNoiseModel (use simpleMechanicalNoiseModel then convert to SE3)
-% 5: [NOT YET] complexHomogeneousNoiseModel (use complexMechanicalNoiseModel then convert to SE3)
+% 5: complexHomogeneousNoiseModel (use complexMechanicalNoiseModel then convert to SE3)
 % 6: simpleHomogeneousNoiseModelAddOnNoise (use simpleMechanicalNoiseModel then convert to SE3 and add on more noise)
-LiDAR_opts.properties.mechanics_noise_model = 6; 
-
-
+LiDAR_opts.properties.mechanics_noise_model = 5; 
 LiDAR_opts.properties.sensor_noise_enable = 0;
 LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
 LiDAR_opts.properties.range = 50;
 LiDAR_opts.properties.return_once = 0;
-LiDAR_opts.centriod = [0 0 0];
+LiDAR_opts.pose.centriod = [0 0 0];
+LiDAR_opts.pose.rpy = [0 0 0]; % deg (roll pitch yaw)
+LiDAR_opts.pose.H = constructHByRPYXYZ(LiDAR_opts.pose.rpy, LiDAR_opts.pose.centriod);
 LiDAR_opts.properties = getLiDARPreperties("UltraPuckV2", LiDAR_opts.properties);
 [LiDAR_opts.properties.ring_elevation, ...
- LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties.elevation_struct, 'ring_', LiDAR_opts.properties.beam);
+ LiDAR_opts.properties.ordered_ring_elevation] = parseLiDARStruct(LiDAR_opts.properties, 'ring_', LiDAR_opts.properties.beam);
 
 
 %% Simulate environment
@@ -127,7 +127,7 @@ end
 
 
 plotMultiplePolygonsVertices(fig_handles(3), object_list, color_list)
-plotOriginalAxis(fig_handles(3), 1, '-k')
+plotOriginalAxis(fig_handles(3), LiDAR_opts.pose.H, 4, '-k')
 viewCurrentPlot(fig_handles(3), "LiDAR simulation (Scene " + num2str(scene) + ")")
 set(fig_handles(3), 'visible', 'off')
 set(fig_handles(3), 'Color', 'b')
@@ -138,17 +138,17 @@ set(fig_handles(3), 'Color', 'b')
 disp("- Drawing points on obstacles...")
 plotMultiplePolygonsVertices(fig_handles(4), object_list, color_list)
 % scatter3(fig_handle(4), [boundary.vertices.x], [boundary.vertices.y], [boundary.vertices.z], 'fill')
-plotOriginalAxis(fig_handles(4), 1, '-k')
+plotOriginalAxis(fig_handles(3), LiDAR_opts.pose.H, 1, '-k')
 for object = 1:length(object_list)
     scatter3(fig_handles(4), [object_list(object).ring_points.x], ...
                              [object_list(object).ring_points.y], ...
-                             [object_list(object).ring_points.z], '.', 'MarkerFaceColor',color_list{object})
+                             [object_list(object).ring_points.z], '.', 'MarkerEdgeColor',color_list{object})
     
     % Plot on separated plots
     % Noisy-points
     scatter3(fig_handles(4+object), [object_list(object).ring_points.x], ...
                                     [object_list(object).ring_points.y], ...
-                                    [object_list(object).ring_points.z], '.', 'MarkerFaceColor', color_list{object})
+                                    [object_list(object).ring_points.z], '.', 'MarkerEdgeColor', color_list{object})
     hold(fig_handles(4+object), 'on')
 
     % Noise-less pionts
@@ -213,6 +213,8 @@ saveas(fig_handles(3),strcat(opts.save_path,'LiDARSimulation', num2str(scene),'.
 saveas(fig_handles(3),strcat(opts.save_path,'LiDARSimulation', num2str(scene),'.pdf'));
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.fig'));
 saveas(fig_handles(4),strcat(opts.save_path,'objects', num2str(scene),'.pdf'));
+ring_sorted = checkSimulatorRingOrder(LiDAR_ring_points);
+
 
 %% Intrinsic Calibration
 opt_formulation = ["Lie", "BaseLine1", "BaseLine2"]; % Lie or Spherical
@@ -345,7 +347,7 @@ disp("Showing comparison")
 struct2table(results)
 
 % check if ring mis-ordered
-disp("If the rings are mis-ordered...")
+disp("Checking if the rings are mis-ordered...")
 checkRingOrderWithOriginal(data_split_with_ring_cartesian_original, data_split_with_ring_cartesian, num_targets, opts.num_beams)
 
 
@@ -364,12 +366,16 @@ for object = 1:length(object_list)
         if isempty( data_split_with_ring_cartesian{object}(ring).points)
             continue;
         end
-        offset_color = max(1, mod(object+1, length(object_list)));
+        % draw ring in differnt color
+        offset_color = max(1, mod(object+1, length(object_list))); % 
         scatter3(fig_handles(4+object), data_split_with_ring_cartesian{object}(ring).points(1,:),...
                              data_split_with_ring_cartesian{object}(ring).points(2,:),...
                              data_split_with_ring_cartesian{object}(ring).points(3,:),...
-                             50, '.', 'MarkerFaceColor', color_list{offset_color})
-                         
+                             50, '.', 'MarkerEdgeColor', color_list{offset_color})
+%         scatter3(fig_handles(4+object), data_split_with_ring_cartesian{object}(ring).points(1,:),...
+%                              data_split_with_ring_cartesian{object}(ring).points(2,:),...
+%                              data_split_with_ring_cartesian{object}(ring).points(3,:),...
+%                              50, '.', 'MarkerEdgeColor', color_list{object})                   
          text(fig_handles(4+object), mean(data_split_with_ring_cartesian{object}(ring).points(1,:)), ...
                                      mean(data_split_with_ring_cartesian{object}(ring).points(2,:)), ...
                                      mean(data_split_with_ring_cartesian{object}(ring).points(3,:)), "C"+num2str(ring-1))
