@@ -40,6 +40,7 @@
 % addpath('..\extrinsic_lidar_camera_calibration\')
 % methods = ["\Lie\", "\BaseLine1\", "\BaseLine3\"];
 % Intrinsic calibration 
+
 % opts.method = 3; % Lie; BaseLine1; BaseLine3
 % opts.datatype = "Simulation"; %Experiment , Simulation
 % opts.iterative = 0;
@@ -404,7 +405,7 @@ function LiDAR_simulation(scene, opts)
                 continue;
             end
             % draw ring in differnt color
-            offset_color = max(1, mod(object+1, length(object_list))); % 
+            offset_color = max(1, mod(object+1, length(object_list)+1)); % 
             scatter3(fig_handles(4+object), data_split_with_ring_cartesian{object}(ring).points(1,:),...
                                  data_split_with_ring_cartesian{object}(ring).points(2,:),...
                                  data_split_with_ring_cartesian{object}(ring).points(3,:),...
