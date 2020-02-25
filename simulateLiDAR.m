@@ -103,11 +103,13 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
     range = LiDAR_opts.properties.range;
     num_beam = LiDAR_opts.properties.beam;
     num_obj = length(objects);
-    LiDAR_centroid = LiDAR_opts.centriod;
+    LiDAR_centroid = LiDAR_opts.pose.centriod;
+    LiDAR_pose = LiDAR_opts.pose.H;
     
     if ~iscolumn(LiDAR_centroid)
         LiDAR_centroid = LiDAR_centroid';
     end
+    
     
     num_points = floor(2*pi/resolution);
     ring_points(num_beam) = struct();
@@ -163,18 +165,21 @@ function [objects, LiDAR_points, all_points] = simulateLiDAR(objects, boundary, 
 %         [model_noisy_x, model_noisy_y, model_noisy_z] = sph2cart(noise_az, noise_el, noise_range);
 
          
-        % Elevatoin angle for this ring
+        % Elevatoin angle and height for this beam
         elevation = deg2rad(LiDAR_opts_tmp.properties.ring_elevation(ring_num).angle);
+        height = LiDAR_opts_tmp.properties.ring_elevation(ring_num).height; 
         points = zeros(5, num_points); % X Y Z I R
         
         for i = 1 : num_points
             azimuth = (i-1) * resolution; % in rad
-%             fprintf("ring_num: %i; point_num: %i\n", ring_num, i)
             [x, y, z] = sph2cart(azimuth, elevation, range);
-            point = [x; y; z];
-            point = point + LiDAR_centroid; 
-            point = limitInBoundaryWithBoundaryPlanes(point, LiDAR_centroid, boundary);
+            z = z + height; % local frame offset
+            point = [x; y; z; 1];
             
+            % rotate points by lidar globle frame
+            point = LiDAR_opts_tmp.pose.H * point; 
+            point = limitInBoundaryWithBoundaryPlanes(point(1:3), LiDAR_centroid, boundary);
+
             % Apply model noise (Biases of the system)
 %             [noisy_x, noisy_y noisy_z] = sph2cart(azimuth + deg2rad(noise_az), ...
 %                                                    elevation + deg2rad(noise_el),...
