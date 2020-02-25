@@ -45,15 +45,17 @@ function point = limitInBoundaryWithBoundaryPlanes(p_1, p_2, boundary)
     end
     
     flag_intersect = 0;
-    intersect(size(boundary.faces,2)) = struct();
-    for i = 1:size(boundary.faces,2)
+    intersect(size(boundary.faces, 2)) = struct();
+    for i = 1:size(boundary.faces, 2)
         intersect(i).d = norm(p_1 - p_2);
+%         intersect(i).point = p_1;
         [I, check] = findIntersectionOfPlaneAndLineGivenPlane(boundary.faces(i).normal, ...
-                                                              boundary.faces(i).centroid, p_1, p_2);
+                          boundary.faces(i).centroid, p_1, p_2);
+        intersect(i).point = I;
         if check == 1 % intersect with the plane 
             flag_intersect = 1;
             intersect(i).point = I;
-            intersect(i).d = norm(I);
+            intersect(i).d = norm(I - p_2);
         end
     end
     
@@ -63,6 +65,14 @@ function point = limitInBoundaryWithBoundaryPlanes(p_1, p_2, boundary)
     else
         point = p_1;
     end
+    
+    if isempty(point)
+        dbstop in limitInBoundaryWithBoundaryPlanes at 65
+        error("point is empty")
+    end
+    
+    
+%     dbstop if isempty(point)
 %     disp("---")
 %     index
 %     intersect(:).d
@@ -70,17 +80,3 @@ function point = limitInBoundaryWithBoundaryPlanes(p_1, p_2, boundary)
 %     flag_intersect
 %     point
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
