@@ -92,7 +92,7 @@ disp("- Loading LiDAR properties...")
 % 4: simpleHomogeneousNoiseModel (use simpleMechanicalNoiseModel then convert to SE3)
 % 5: complexHomogeneousNoiseModel (use complexMechanicalNoiseModel then convert to SE3)
 % 6: simpleHomogeneousNoiseModelAddOnNoise (use simpleMechanicalNoiseModel then convert to SE3 and add on more noise)
-LiDAR_opts.properties.mechanics_noise_model = 5; 
+LiDAR_opts.properties.mechanics_noise_model = 3; 
 LiDAR_opts.properties.sensor_noise_enable = 0;
 LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
 LiDAR_opts.properties.range = 50;
@@ -367,7 +367,7 @@ for object = 1:length(object_list)
             continue;
         end
         % draw ring in differnt color
-        offset_color = max(1, mod(object+1, length(object_list))); % 
+        offset_color = max(1, mod(object+1, length(object_list)+1)); % 
         scatter3(fig_handles(4+object), data_split_with_ring_cartesian{object}(ring).points(1,:),...
                              data_split_with_ring_cartesian{object}(ring).points(2,:),...
                              data_split_with_ring_cartesian{object}(ring).points(3,:),...
