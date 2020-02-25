@@ -5,19 +5,18 @@ function noise_model = complexMechanicalNoiseModel(ring_num, LiDAR_opts)
     noise_model.type = 'additive';
     
     % Range noise (+- 0.5 cm)
-    range_max =  0.005;
     range_max =  0.1;
     range_min = -range_max;
     noise_model.range_noise = genRandomNumber(range_min, range_max); 
     
     % Range scaling (percentage of measerments)
-    percentage =  0.05;
+    percentage =  0.08;
     scaling_max = 1 + percentage;
     scaling_min = 1 - percentage;
     noise_model.range_scaling = genRandomNumber(scaling_min, scaling_max); 
     
-    % Horizontal offset (5 cm)
-    h_offset_max =  0.05;
+    % Horizontal offset (8 cm)
+    h_offset_max =  0.08;
     h_offset_min = -h_offset_max;
     noise_model.h_offset = genRandomNumber(h_offset_min, h_offset_max); 
     
