@@ -8,14 +8,14 @@ function noise_model = simpleMechanicalNoiseModel(ring_num, LiDAR_opts)
     range_max =  0.005;
     range_max =  0.1;
     range_min = -range_max;
-    noise_model.range_noise = genRandomNumber(range_min, range_max); 
+    noise_model.range_noise = genRandomNumber(range_min, range_max, ring_num); 
     
     % Azimuth angle (+-20%: 0.04 deg <the resolution is around 0.2 deg>)
     az_noise_level = 0.2;
     az_noise_level = 1;
     az_max = az_noise_level * LiDAR_opts.properties.az_resolution;
     az_min = -az_max;
-    noise_model.az_noise = genRandomNumber(az_max, az_min); 
+    noise_model.az_noise = genRandomNumber(az_max, az_min, ring_num); 
     
     % Elevation angle (1 deg)
     % Becase matlab starts from 1, we have to minus 1 
@@ -30,7 +30,7 @@ function noise_model = simpleMechanicalNoiseModel(ring_num, LiDAR_opts)
     el_noise_level = 1;
     el_noise_level = 5;
     noise_bound = 0.5; % 50% 
-    el_noise = genRandomNumber(-el_noise_level, el_noise_level);
+    el_noise = genRandomNumber(-el_noise_level, el_noise_level, ring_num);
     strs = {(LiDAR_opts.properties.ordered_ring_elevation(:).ring)};
     index = find(ismember(strs, num2str(ring_num)));
     current_el = LiDAR_opts.properties.ordered_ring_elevation(index).angle;
