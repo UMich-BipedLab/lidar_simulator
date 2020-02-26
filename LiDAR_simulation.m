@@ -31,7 +31,7 @@
 
 %% General parameters
 clear, clc
-scene = 9; % Scene number
+scene = 14; % Scene number
 show_statistics = 1;
 % addpath('..\extrinsic_lidar_camera_calibration\')
 % opts.save_path = ".\results_BL2\scene" + num2str(scene)+"\";
@@ -90,9 +90,9 @@ disp("- Loading LiDAR properties...")
 % 2: simpleMechanicalNoiseModel (3 params)
 % 3: complexMechanicalNoiseModel (6 params)
 % 4: simpleHomogeneousNoiseModel (use simpleMechanicalNoiseModel then convert to SE3)
-% 5: complexHomogeneousNoiseModel (use complexMechanicalNoiseModel then convert to SE3)
+% 5: [BUGGY] complexHomogeneousNoiseModel (use complexMechanicalNoiseModel then convert to SE3)
 % 6: simpleHomogeneousNoiseModelAddOnNoise (use simpleMechanicalNoiseModel then convert to SE3 and add on more noise)
-LiDAR_opts.properties.mechanics_noise_model = 3; 
+LiDAR_opts.properties.mechanics_noise_model = 6; 
 LiDAR_opts.properties.sensor_noise_enable = 0;
 LiDAR_opts.properties.rpm = 1200; % 300, 60, 900, 1200
 LiDAR_opts.properties.range = 50;
@@ -174,7 +174,7 @@ view_angle = [-86, 14];
 viewCurrentPlot(fig_handles(4), "Rings on Objects (Scene " + num2str(scene) + ")", view_angle)
 view_angle = [90, 0];
 for object = 1:length(object_list)
-    viewCurrentPlot(fig_handles(4+object), "Object 1 (Scene " + num2str(scene) + ")", view_angle)
+    viewCurrentPlot(fig_handles(4+object), "Object " +num2str(object)+ "(Scene " + num2str(scene) + ")", view_angle)
 end
 
 if show_statistics
