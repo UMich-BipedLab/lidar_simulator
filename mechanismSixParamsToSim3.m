@@ -1,4 +1,4 @@
-function RT = mechanismSixParamsToSim3(R, eps, D, beta, delta, s, H, V)
+function RT = mechanismSixParamsToSim3(rho, phi, delta_rho, delta_phi, delta_theta, s, h, v)
     % R: range
     % D: correction on R
     
@@ -11,15 +11,14 @@ function RT = mechanismSixParamsToSim3(R, eps, D, beta, delta, s, H, V)
 %     R3 = [cos(delta) 0 -sin(delta); 0 1 0; sin(delta) 0 cos(delta)];
 %     T2 = [R+D; 0; 0];
 %     RT = R2*R3*T2;
-    beta = deg2rad(beta);
-    eps = deg2rad(eps);
-    delta = deg2rad(delta);
+    delta_phi = deg2rad(delta_phi);
+    phi = deg2rad(phi);
+    delta_theta = deg2rad(delta_theta);
     
-    
-    T1 = sin(eps)*(D*cos(delta)*cos(beta)-H*sin(beta)) - cos(eps)*(D*cos(delta)*sin(beta)+H*cos(beta));
-    T2 = sin(eps)*(D*cos(delta)*sin(beta)+H*cos(beta)) + cos(eps)*(D*cos(delta)*cos(beta)-H*sin(beta));
-    RT = [s*cos(delta)*cos(beta) -s*cos(delta)*sin(beta) 0 T2;
-          s*cos(delta)*sin(beta)  s*cos(delta)*cos(beta) 0 T1;
-          0 0 (1/cos(delta))^2 (s*R+D)*sin(delta)+V;
+    T1 = sin(phi)*(delta_rho*cos(delta_theta)*cos(delta_phi)-h*sin(delta_phi)) - cos(phi)*(delta_rho*cos(delta_theta)*sin(delta_phi)+h*cos(delta_phi));
+    T2 = sin(phi)*(delta_rho*cos(delta_theta)*sin(delta_phi)+h*cos(delta_phi)) + cos(phi)*(delta_rho*cos(delta_theta)*cos(delta_phi)-h*sin(delta_phi));
+    RT = [s*cos(delta_theta)*cos(delta_phi) -s*cos(delta_theta)*sin(delta_phi) 0 T2;
+          s*cos(delta_theta)*sin(delta_phi)  s*cos(delta_theta)*cos(delta_phi) 0 T1;
+          0 0 (1/cos(delta_theta))^2 (s*rho+delta_rho)*sin(delta_theta)+v;
           0 0 0 1];
 end
