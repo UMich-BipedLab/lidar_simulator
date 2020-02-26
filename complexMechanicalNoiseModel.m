@@ -7,24 +7,24 @@ function noise_model = complexMechanicalNoiseModel(ring_num, LiDAR_opts)
     % Range noise (+- 0.5 cm)
     range_max =  0.1;
     range_min = -range_max;
-    noise_model.range_noise = genRandomNumber(range_min, range_max); 
+    noise_model.range_noise = genRandomNumber(range_min, range_max, ring_num); 
     
     % Range scaling (percentage of measerments)
     percentage =  0.08;
     scaling_max = 1 + percentage;
     scaling_min = 1 - percentage;
-    noise_model.range_scaling = genRandomNumber(scaling_min, scaling_max); 
+    noise_model.range_scaling = genRandomNumber(scaling_min, scaling_max,ring_num); 
     
     % Horizontal offset (8 cm)
     h_offset_max =  0.08;
     h_offset_min = -h_offset_max;
-    noise_model.h_offset = genRandomNumber(h_offset_min, h_offset_max); 
+    noise_model.h_offset = genRandomNumber(h_offset_min, h_offset_max, ring_num); 
     
     % NOTICE
     % Vertical offset (0.5 cm BASED on each ring offset 1 cm)
     v_offset_max =  0.005;
     v_offset_min = -v_offset_max;
-    noise_model.v_offset = genRandomNumber(v_offset_min, v_offset_max); 
+    noise_model.v_offset = genRandomNumber(v_offset_min, v_offset_max, ring_num); 
     
     
     % Azimuth angle (+-20%: 0.04 deg <the resolution is around 0.2 deg>)
@@ -32,7 +32,7 @@ function noise_model = complexMechanicalNoiseModel(ring_num, LiDAR_opts)
     az_noise_level = 1;
     az_max = az_noise_level * LiDAR_opts.properties.az_resolution;
     az_min = -az_max;
-    noise_model.az_noise = genRandomNumber(az_max, az_min); 
+    noise_model.az_noise = genRandomNumber(az_max, az_min, ring_num); 
     
     % Elevation angle (1 deg)
     % Becase matlab starts from 1, we have to minus 1 
@@ -47,7 +47,7 @@ function noise_model = complexMechanicalNoiseModel(ring_num, LiDAR_opts)
     el_noise_level = 1;
     el_noise_level = 5;
     noise_bound = 0.5; % 50% 
-    el_noise = genRandomNumber(-el_noise_level, el_noise_level);
+    el_noise = genRandomNumber(-el_noise_level, el_noise_level, ring_num);
     strs = {(LiDAR_opts.properties.ordered_ring_elevation(:).ring)};
     index = find(ismember(strs, num2str(ring_num)));
     current_el = LiDAR_opts.properties.ordered_ring_elevation(index).angle;
