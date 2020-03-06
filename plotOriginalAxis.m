@@ -33,6 +33,9 @@ function plotOriginalAxis(fig_handle, pose_H, length, properteis)
     if ~exist('properteis', 'var')
         properteis = '-b';
     end
+    if ~exist('length', 'var')
+        length = 1;
+    end
     origin = pose_H(:, 4);
     x_arrow = pose_H * ([length; 0; 0; 0]);
     y_arrow = pose_H * ([0; length; 0; 0]);
@@ -40,6 +43,11 @@ function plotOriginalAxis(fig_handle, pose_H, length, properteis)
     
     quiver3(fig_handle, ...
             repelem(origin(1), 3)', repelem(origin(2), 3)', repelem(origin(3), 3)', ...
-            x_arrow(1:3), y_arrow(1:3), z_arrow(1:3), ...
+            [x_arrow(1) ; y_arrow(1) ;  z_arrow(1)], ...
+            [x_arrow(2) ; y_arrow(2) ;  z_arrow(2)], ... 
+            [x_arrow(3) ; y_arrow(3) ;  z_arrow(3)], ...
             properteis, 'fill', 'LineWidth', 3)
+    text(x_arrow(1), y_arrow(1), z_arrow(1), "x")
+    text(x_arrow(2), y_arrow(2), z_arrow(2), "y")
+    text(x_arrow(3), y_arrow(3), z_arrow(3), "z")
 end
