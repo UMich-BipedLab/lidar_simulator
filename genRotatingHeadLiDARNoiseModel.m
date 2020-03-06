@@ -1,0 +1,43 @@
+function ring_noise_model = genRotatingHeadLiDARNoiseModel(ring_number, LiDAR_opts)
+    names_of_noise_models = ["noSimpleMechanicalNoiseModel",... 
+                             "whiteNoise",...
+                             "simpleMechanicalNoiseModel", ...
+                             "complexMechanicalNoiseModel", ...
+                             "simpleHomogeneousNoiseModel", ...
+                             "complexHomogeneousNoiseModel", ...
+                             "simpleHomogeneousNoiseModelAddOnNoise"];
+    if ring_number == 1
+        fprintf("--- Using %s noise model \n", names_of_noise_models(LiDAR_opts.properties.mechanics_noise_model+1));
+    end
+    switch LiDAR_opts.properties.mechanics_noise_model
+        case 0
+            ring_noise_model = noSimpleMechanicalNoiseModel(ring_number, LiDAR_opts);
+        case 1
+            ring_noise_model = whiteNoise(ring_number, LiDAR_opts);
+        case 2
+            ring_noise_model = simpleMechanicalNoiseModel(ring_number, ...
+                                                          LiDAR_opts);
+        case 3
+            ring_noise_model = complexMechanicalNoiseModel(ring_number, ...
+                                                           LiDAR_opts);
+        case 4
+            ring_noise_model = simpleHomogeneousNoiseModel(ring_number, ...
+                                                           LiDAR_opts);
+        case 5
+            ring_noise_model = complexHomogeneousNoiseModel(ring_number, ...
+                                                            LiDAR_opts);
+        case 6
+            ring_noise_model = simpleHomogeneousNoiseModelAddOnNoise(ring_number, ...
+                                                                     LiDAR_opts);
+        otherwise
+            error("No such LiDAR noise model (Mechanism model): %i", ...
+                   LiDAR_opts.properties.mechanics_noise_model)
+%             for i = 1:32
+%                 ring_number = i
+%             ring_noise_model = simpleMechanicalNoiseModel(ring_number, ...
+%                                                           LiDAR_opts)
+%             end
+    end
+            
+    
+end
