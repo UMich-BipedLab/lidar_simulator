@@ -44,6 +44,21 @@
 % vertices.y = [0.4330 3.0616e-17 -0.4330 -0.4330 -5.3594e-16 0.4330];
 % vertices.z = [0.2500 0.5000 0.2500 -0.2500 -0.5000 -0.2500];
 % [I, check] = t_findIntersectionOfPlaneAndLine(vertices, p_1, p_2);
+% clc
+% p_1=[0
+%      0.5000
+%      0.5000];
+% p_2=[5
+%      0.5000
+%      0.5000];
+% objects2 = genShape("polygon", 1, 4);
+% object2_mat = convertXYZstructToXYZmatrix(objects2);
+% object2_mat_h = converToHomogeneousCoord(object2_mat);
+% rpy = [0 0 0]; % in degree
+% xyz = [2 0 0];
+% moved_obj2_mat_h = moveByRPYXYZ(object2_mat_h, rpy, xyz);
+% objects.object_vertices = convertXYZmatrixToXYZstruct(moved_obj2_mat_h);
+% [I, normal, check] = t_findIntersectionOfPlaneAndLine(objects, p_1, p_2)
 
 % function [I, check] = findIntersectionOfPlaneAndLine(n, V0, P0, P1)
 function [I, normal, check] = findIntersectionOfPlaneAndLine(object, p_1, p_2)
