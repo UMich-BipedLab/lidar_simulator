@@ -30,8 +30,11 @@
 %}
 
 function plotConnectedVerticesStructure(fig_handle, vertices, properties, hold_on)
+%     if isempty(fig_handle)
+%         fig_handle = createFigHandleWithNumber(1, 999,"test");
+%     end
     if ~exist('properties','var')
-        properties = '';
+        properties = 'k';
     end
     
     if ~exist('hold_on','var')
