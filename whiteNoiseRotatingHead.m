@@ -1,4 +1,4 @@
-function noise_model = whiteNoise(ring_num, LiDAR_opts)  
+function noise_model = whiteNoiseRotatingHead(ring_num, LiDAR_opts)  
     
     % Ring number
     noise_model.type = 'additive';
