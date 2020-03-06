@@ -36,6 +36,9 @@
 % H = t_constructHByRPYXYZ(rpy, xyz)
 
 function H = constructHByRPYXYZ(rpy, xyz)
+    if ~isvector(rpy) || ~isvector(xyz)
+        error("inputs have to be two vectors")
+    end
     if length(rpy) ~= 3 || length(xyz) ~=3
         error("wrong input sizes: \n --- length of RPY: %i \n --- length of XYZ: %i", length(rpy), length(xyz))
     end
