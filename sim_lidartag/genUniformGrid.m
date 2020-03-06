@@ -28,6 +28,9 @@
  * AUTHOR: Bruce JK Huang (bjhuang[at]umich.edu)
  * WEBSITE: https://www.brucerobot.com/
 %}
+% [x,y] = t_genUniformGrid(50,5);
+% scatter(x,y, '.')
+% axis equal
 
 function [x, y] = genUniformGrid(num_points, length)
     x_coord = linspace(0, length, num_points);
