@@ -7,7 +7,7 @@ This is a LiDAR simulator package for spinning LiDARs and solid-state LiDARs, de
 Maintainer: Bruce JK Huang, bjhuang@umich.edu  
 Affiliation: The Biped Lab, the University of Michigan**
 
-This package has been tested under MATLAB2019a and Ubuntu 16.04.
+This package has been tested under MATLAB2019a and Ubuntu 16.04.  
 **[Issues]**
 If you encounter _any_ issues, I would be happy to help. If you cannot find a related one in the existing issues, please open a new one. I will try my best to help! 
 
@@ -70,10 +70,12 @@ To test the simulator for a solid state lidar, run _main_solid_state_lidar.m_
 -->
 2. Jiunn-Kai Huang and J. Grizzle, "Improvements to Target-Based 3D LiDAR to Camera Calibration" ([PDF](https://github.com/UMich-BipedLab/extrinsic_lidar_camera_calibration/blob/master/LiDAR2CameraCalibration.pdf))([arXiv](https://arxiv.org/abs/1910.03126))
 ```
-@article{huang2019improvements,
-  title={Improvements to Target-Based 3D LiDAR to Camera Calibration},
-  author={Huang, Jiunn-Kai and Grizzle, Jessy W},
-  journal={arXiv preprint arXiv:1910.03126},
-  year={2019}
-}
+@article{huang2020improvements,
+  author={J. {Huang} and J. W. {Grizzle}},
+  journal={IEEE Access}, 
+  title={Improvements to Target-Based 3D LiDAR to Camera Calibration}, 
+  year={2020},
+  volume={8},
+  number={},
+  pages={134101-134110},}
 ```
